@@ -9,7 +9,7 @@ const registerUser = async (req, res) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({
       success: false,
-      errors: errors.array().map(err => err.msg), 
+      errors: errors.array().map((err) => err.msg),
     });
   }
 
@@ -49,6 +49,15 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      errors: errors.array().map((err) => err.msg),
+    });
+  }
 
   //Validation
   if (!email || !password) {
