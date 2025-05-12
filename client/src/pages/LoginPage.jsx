@@ -15,6 +15,28 @@ const LoginPage = () => {
   const location = useLocation();
 
   useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        await axios.get("http://localhost:5000/api/auth/verify", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        // If verification successful, redirect to "/"
+        navigate("/", { replace: true });
+      } catch (err) {
+        // Token invalid, do nothing
+        console.error("Token invalid or expired");
+      }
+    };
+
+    verifyToken();
+  }, [navigate]);
+
+  useEffect(() => {
     if (location.state?.message) {
       toast.success(location.state.message, {
         position: "top-center",
@@ -59,7 +81,7 @@ const LoginPage = () => {
 
   return (
     <>
-      <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+      <div className="flex min-h-svh flex-col items-center justify-center p-6 md:p-10 bg-neutral-200">
         <div className="w-full max-w-sm md:max-w-4xl">
           <div className={cn("flex flex-col gap-6")}>
             <Card className="overflow-hidden p-0">

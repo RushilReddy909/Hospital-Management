@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,28 @@ import { useNavigate } from "react-router-dom";
 
 const SignupPage = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        await axios.get("http://localhost:5000/api/auth/verify", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        // If verification successful, redirect to "/"
+        navigate("/", { replace: true });
+      } catch (err) {
+        // Token invalid, do nothing
+        console.error("Token invalid or expired");
+      }
+    };
+
+    verifyToken();
+  }, [navigate]);
 
   const [userInfo, setUserInfo] = useState({
     username: "",
