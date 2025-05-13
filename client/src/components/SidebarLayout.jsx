@@ -11,8 +11,26 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Outlet } from "react-router";
+
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 export default function Page() {
+  const date = new Date();
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -23,18 +41,14 @@ export default function Page() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbPage>October 2024</BreadcrumbPage>
+                <BreadcrumbPage>
+                  {months[date.getMonth()]} {date.getFullYear()}
+                </BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-5">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <div key={i} className="aspect-square rounded-xl bg-muted/50" />
-            ))}
-          </div>
-        </div>
+        <Outlet />
       </SidebarInset>
     </SidebarProvider>
   );

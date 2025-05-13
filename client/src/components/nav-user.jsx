@@ -1,11 +1,4 @@
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles,
-} from "lucide-react";
+import { Bell, ChevronsUpDown, LogOut, Phone, User } from "lucide-react";
 import { FaUser } from "react-icons/fa";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,9 +17,17 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 export function NavUser({ user }) {
   const { isMobile } = useSidebar();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   return (
     <SidebarMenu>
@@ -69,21 +70,23 @@ export function NavUser({ user }) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
+            {/* <DropdownMenuGroup>
               <DropdownMenuItem>
                 <Sparkles />
                 Upgrade to Pro
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
+            <DropdownMenuSeparator /> */}
+            <DropdownMenuGroup className="[&>*:not(:first-child):not(:last-child)]:my-1">
+              <DropdownMenuItem asChild>
+                <a href="/account">
+                  <User />
+                  Account
+                </a>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <CreditCard />
-                Billing
+                <Phone />
+                Support
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Bell />
@@ -91,9 +94,15 @@ export function NavUser({ user }) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOut />
-              Log out
+            <DropdownMenuItem className={"p-0"} onClick={handleLogout}>
+              <a
+                href="#"
+                onClick={handleLogout}
+                className="py-1.5 px-2 rounded-sm w-full hover:bg-red-500 hover:text-white transition-all font-semibold flex items-center gap-2 text-red-500"
+              >
+                <LogOut className="text-inherit" />
+                Logout
+              </a>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
