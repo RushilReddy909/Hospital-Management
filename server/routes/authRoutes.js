@@ -1,7 +1,7 @@
 import express from "express";
 import { body } from "express-validator";
 import { registerUser, loginUser } from "../controllers/authController.js";
-import { verifyToken } from "../controllers/authMiddleware.js"
+import { verifyToken } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -46,7 +46,7 @@ router.post(
   loginUser
 );
 
-router.get("/verify", verifyToken, (req, res) => {
+router.get("/verify", verifyToken, async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Successfully verified Token",

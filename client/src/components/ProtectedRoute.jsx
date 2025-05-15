@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import axios from "axios";
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, reqRole = "patient" }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // Initially null (for loading state)
   const token = localStorage.getItem("token"); // Get the token from localStorage
 

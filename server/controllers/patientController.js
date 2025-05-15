@@ -1,9 +1,8 @@
-import mongoose from "mongoose";
 import patientModel from "../models/patientModel.js";
 import { validationResult } from "express-validator";
 
-//User Routes
-const createSelfPatient = async (req, res) => {
+//Patient Routes
+const upsertSelfPatient = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res
@@ -14,23 +13,28 @@ const createSelfPatient = async (req, res) => {
   const userID = req.user.id;
 
   try {
-    const exists = await patientModel.findOne({ userID });
-    if (exists) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Patient already registered" });
+    let patient = await patientModel.findOneAndUpdate({ userID }, req.body, {
+      new: true,
+    });
+
+    if (!patient) {
+      const newPatient = new patientModel({ ...req.body, userID });
+      patient = await newPatient.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "Registered as new patient successfully",
+        data: patient,
+      });
     }
 
-    const newPatient = new patientModel({ ...req.body, userID });
-    const saved = await newPatient.save();
-
-    res.status(201).json({
+    return res.status(200).json({
       success: true,
-      message: "Registered as patient successfully",
-      data: saved,
+      message: "Profile updated successfully",
+      data: patient,
     });
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error",
       error: err.message,
@@ -46,36 +50,11 @@ const getSelfPatient = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Patient record not found" });
     }
-    res.status(200).json({ success: true, data: patient });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-const updateSelfPatient = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res
-      .status(400)
-      .json({ success: false, errors: errors.array().map((e) => e.msg) });
-  }
-
-  try {
-    const updated = await patientModel.findOneAndUpdate(
-      { userID: req.user.id },
-      req.body,
-      { new: true }
-    );
-
-    if (!updated) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Patient not found" });
-    }
-
-    res
-      .status(200)
-      .json({ success: true, message: "Profile updated", data: updated });
+    return res.status(200).json({
+      success: true,
+      message: "Patient record found",
+      data: patient,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -138,7 +117,9 @@ const getPatient = async (req, res) => {
   }
 
   try {
-    const patient = await patientModel.findOne({userID: new mongoose.Types.ObjectId(id)});
+    const patient = await patientModel.findOne({
+      userID: new mongoose.Types.ObjectId(id),
+    });
 
     if (!patient) {
       return res.status(400).json({
@@ -179,10 +160,14 @@ const updatePatient = async (req, res) => {
   }
 
   try {
-    const updated = await patientModel.findOneAndUpdate({userID: new mongoose.Types.ObjectId(id)}, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const updated = await patientModel.findOneAndUpdate(
+      { userID: new mongoose.Types.ObjectId(id) },
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     return res.status(200).json({
       success: true,
@@ -208,7 +193,9 @@ const deletePatient = async (req, res) => {
   }
 
   try {
-    await patientModel.findOneAndDelete({userID: new mongoose.Types.ObjectId(id)});
+    await patientModel.findOneAndDelete({
+      userID: new mongoose.Types.ObjectId(id),
+    });
     res.status(200).json({
       success: true,
       message: "Successfully deleted patient",
@@ -223,12 +210,11 @@ const deletePatient = async (req, res) => {
 };
 
 export {
-  addPatient,
+  upsertSelfPatient,
+  getSelfPatient,
   getAllPatients,
   getPatient,
   updatePatient,
   deletePatient,
-  createSelfPatient,
-  getSelfPatient,
-  updateSelfPatient,
+  addPatient,
 };

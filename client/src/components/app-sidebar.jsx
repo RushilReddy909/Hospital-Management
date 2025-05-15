@@ -1,7 +1,5 @@
 import * as React from "react";
-import { BriefcaseMedical, Plus, UsersRound } from "lucide-react";
-
-import { Calendars } from "@/components/calendars";
+import { BriefcaseMedical, UsersRound } from "lucide-react";
 import { DatePicker } from "@/components/date-picker";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -18,6 +16,9 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useEffect } from "react";
+import { api } from "@/utils/api";
+import { useState } from "react";
 
 const hospital = {
   name: "NeoCure Hospital",
@@ -39,11 +40,24 @@ const items = [
 ];
 
 export function AppSidebar({ ...props }) {
-  const user = {
-    name: "Rushil Reddy",
-    email: "rushil@gmail.com",
-    avatar: "hi",
-  };
+  const [user, setUser] = useState({
+    name: "",
+    email: "",
+    avatar: "",
+  });
+
+  useEffect(() => {
+    const getUserInfo = async () => {
+      try {
+        const res = await api.get("/user");
+        setUser({ ...res.data.data, avatar: "" });
+      } catch (err) {
+        console.log("Could not retrieve Data");
+      }
+    };
+
+    getUserInfo();
+  }, []);
 
   return (
     <Sidebar {...props}>
@@ -51,17 +65,20 @@ export function AppSidebar({ ...props }) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
+              asChild
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={hospital.avatar} alt={hospital.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-bold">{hospital.name}</span>
-                <span className="truncate text-xs">{hospital.desc}</span>
-              </div>
+              <a href="/">
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarImage src={hospital.avatar} alt={hospital.name} />
+                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-bold">{hospital.name}</span>
+                  <span className="truncate text-xs">{hospital.desc}</span>
+                </div>
+              </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -74,7 +91,12 @@ export function AppSidebar({ ...props }) {
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className={"p-5 font-semibold  hover:bg-green-500 hover:text-white transition-all"}>
+                  <SidebarMenuButton
+                    asChild
+                    className={
+                      "p-5 font-semibold  hover:bg-green-500 hover:text-white transition-all"
+                    }
+                  >
                     <a href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
