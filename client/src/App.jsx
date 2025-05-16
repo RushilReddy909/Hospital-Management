@@ -6,6 +6,8 @@ import Home from "./pages/Home";
 import Profile from "./pages/Account";
 import SidebarLayout from "./components/SidebarLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminOnly from "./components/AdminOnly";
+import Admin from "./pages/Admin";
 
 const App = () => {
   return (
@@ -20,6 +22,9 @@ const App = () => {
         >
           <Route path="/" element={<Home />} />
           <Route path="/account" element={<Profile />} />
+        </Route>
+        <Route element={<AdminOnly />}>
+          <Route path="/admin" element={<Admin />} />
         </Route>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<SignupPage />} />

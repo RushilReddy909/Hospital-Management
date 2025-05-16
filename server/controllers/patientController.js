@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import patientModel from "../models/patientModel.js";
 import { validationResult } from "express-validator";
 

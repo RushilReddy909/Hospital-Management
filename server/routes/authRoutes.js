@@ -46,11 +46,4 @@ router.post(
   loginUser
 );
 
-router.get("/verify", verifyToken, async (req, res) => {
-  return res.status(200).json({
-    success: true,
-    message: "Successfully verified Token",
-  });
-});
-
 export default router;

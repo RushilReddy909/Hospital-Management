@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
-import { api } from "@/utils/api";
+import { Navigate, Outlet } from "react-router-dom";
+import { admin } from "@/utils/api";
 
-const ProtectedRoute = ({ children }) => {
+const AdminOnly = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // Initially null (for loading state)
   const token = localStorage.getItem("token"); // Get the token from localStorage
 
@@ -13,9 +13,9 @@ const ProtectedRoute = ({ children }) => {
     }
 
     // Verify token with the backend
-    const verifyToken = async () => {
+    const adminOnly = async () => {
       try {
-        const response = await api.get("/user/verify");
+        const response = await admin.get("/verify");
         // If the response is successful, the token is valid
         setIsAuthenticated(true);
       } catch (error) {
@@ -24,7 +24,7 @@ const ProtectedRoute = ({ children }) => {
       }
     };
 
-    verifyToken(); // Call the verification function
+    adminOnly(); // Call the verification function
   }, [token]);
 
   // While loading, show a loading message or spinner
@@ -32,11 +32,11 @@ const ProtectedRoute = ({ children }) => {
 
   // If not authenticated, redirect to the login page
   if (isAuthenticated === false) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // If authenticated, render the children (protected page content)
-  return children;
+  return <Outlet />;
 };
 
-export default ProtectedRoute;
+export default AdminOnly;

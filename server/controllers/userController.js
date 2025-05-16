@@ -65,6 +65,13 @@ const updateUser = async (req, res) => {
       new: true,
     });
 
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Couldn't find user",
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "Successfully updated",

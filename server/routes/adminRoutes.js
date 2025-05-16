@@ -13,8 +13,15 @@ import {
   getAllUsers,
   getUser,
   updateUser,
-  deleteUser
-} from "../controllers/userController.js"
+  deleteUser,
+} from "../controllers/userController.js";
+import {
+  addDoctor,
+  getAllDoctors,
+  getDoctor,
+  updateDoctor,
+  deleteDoctor,
+} from "../controllers/doctorController.js";
 
 const router = express.Router();
 
@@ -38,8 +45,12 @@ const patientValidation = [
     .withMessage("Gender is required"),
 
   body("phone")
-    .isNumeric()
-    .withMessage("Phone must be a number")
+    .isString()
+    .withMessage("Phone must be a string of digits")
+    .matches(/^\d+$/)
+    .withMessage("Phone must contain only numbers")
+    .isLength({ min: 10, max: 10 })
+    .withMessage("Phone number must not exceed 10 digits")
     .notEmpty()
     .withMessage("Phone number is required"),
 
@@ -49,6 +60,47 @@ const patientValidation = [
     .notEmpty()
     .withMessage("Description is required"),
 ];
+
+const userValidation = [
+  body("name").optional().isString().withMessage("Name must be a string"),
+  body("email").optional().isEmail().withMessage("Invalid email"),
+];
+
+const doctorValidation = [
+  body("name")
+    .isString()
+    .withMessage("Name must be a string")
+    .notEmpty()
+    .withMessage("Name is required"),
+  body("specialization")
+    .isString()
+    .withMessage("Specialization must be a string")
+    .notEmpty()
+    .withMessage("Specialization is required"),
+  body("phone")
+    .isString()
+    .withMessage("Phone must be a string of digits")
+    .matches(/^\d+$/)
+    .withMessage("Phone must contain only numbers")
+    .isLength({ min: 10, max: 10 })
+    .withMessage("Phone number must not exceed 10 digits")
+    .notEmpty()
+    .withMessage("Phone number is required"),
+  body("gender")
+    .isIn(["Male", "Female"])
+    .withMessage("Gender must be either Male or Female"),
+  body("age")
+    .isInt({ min: 1, max: 120 })
+    .withMessage("Age must be a positive integer"),
+];
+
+//Verify Admin
+router.get("/verify", verifyToken, adminOnly, async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: "Verified Admin",
+  });
+});
 
 //Patient Routes
 router.get("/patients", verifyToken, adminOnly, getAllPatients);
@@ -72,11 +124,25 @@ router.get("/users", verifyToken, adminOnly, getAllUsers);
 
 router.get("/users/:id", verifyToken, adminOnly, getUser);
 
-router.put("/users/:id", verifyToken, adminOnly, updateUser);
+router.put("/users/:id", verifyToken, adminOnly, userValidation, updateUser);
 
 router.delete("/users/:id", verifyToken, adminOnly, deleteUser);
 
 //Doctor Routes
+router.get("/doctors", verifyToken, adminOnly, getAllDoctors);
 
+router.get("/doctors/:id", verifyToken, adminOnly, getDoctor);
+
+router.post("/doctors", verifyToken, adminOnly, doctorValidation, addDoctor);
+
+router.put(
+  "/doctors/:id",
+  verifyToken,
+  adminOnly,
+  doctorValidation,
+  updateDoctor
+);
+
+router.delete("/doctors/:id", verifyToken, adminOnly, deleteDoctor);
 
 export default router;
