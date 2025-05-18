@@ -32,6 +32,11 @@ const doctorSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    status: {
+      type: String,
+      enum: ["Active", "Away"],
+      required: true,
+    },
   },
   {
     timestamps: true,

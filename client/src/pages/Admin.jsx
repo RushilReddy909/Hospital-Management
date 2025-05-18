@@ -39,14 +39,23 @@ const Admin = () => {
       icon: ChartNoAxesCombined,
       component: <Analytics />,
     },
-    { title: "User Management", icon: Users, component: <UserManagement /> },
+    { title: "User Management", 
+      icon: Users, 
+      component: <UserManagement /> 
+    },
     {
       title: "Manage Appointments",
       icon: ClipboardPlus,
       component: <Appointments />,
     },
-    { title: "Medical Records", icon: Archive, component: <Records /> },
-    { title: "Server Logs", icon: Logs, component: <Log /> },
+    { title: "Medical Records", 
+      icon: Archive, 
+      component: <Records /> 
+    },
+    { title: "Server Logs", 
+      icon: Logs, 
+      component: <Log /> 
+    },
   ];
 
   return (
@@ -116,7 +125,7 @@ const Admin = () => {
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
           </header>
-          <main>{component}</main>
+          <main className="h-full">{component}</main>
         </SidebarInset>
       </SidebarProvider>
     </>

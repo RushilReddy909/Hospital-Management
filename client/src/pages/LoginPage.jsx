@@ -9,18 +9,23 @@ import { Label } from "@/components/ui/label";
 import { FaGoogle } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { api } from "@/utils/api";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [verify, setVerify] = useState(true);
 
   useEffect(() => {
     const verifyToken = async () => {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        setVerify(false);
+        return;
+      }
 
       try {
-        await axios.get("http://localhost:5000/api/auth/verify", {
+        await api.get("/user/verify", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -30,6 +35,7 @@ const LoginPage = () => {
       } catch (err) {
         // Token invalid, do nothing
         console.error("Token invalid or expired");
+        setVerify(false);
       }
     };
 
@@ -55,10 +61,7 @@ const LoginPage = () => {
 
   const handleSubmit = async () => {
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        loginInfo
-      );
+      const res = await api.post("/auth/login", loginInfo);
 
       localStorage.setItem("token", res.data.token);
       navigate("/");
@@ -78,6 +81,8 @@ const LoginPage = () => {
       );
     }
   };
+
+  if (verify) return false;
 
   return (
     <>

@@ -8,17 +8,22 @@ import { Label } from "@/components/ui/label";
 import { FaGoogle } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { api } from "@/utils/api";
 
 const SignupPage = () => {
   const navigate = useNavigate();
+  const [verify, setVerify] = useState(true);
 
   useEffect(() => {
     const verifyToken = async () => {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        setVerify(false);
+        return;
+      }
 
       try {
-        await axios.get("http://localhost:5000/api/auth/verify", {
+        await api.get("/user/verify", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -28,6 +33,7 @@ const SignupPage = () => {
       } catch (err) {
         // Token invalid, do nothing
         console.error("Token invalid or expired");
+        setVerify(false);
       }
     };
 
@@ -43,10 +49,7 @@ const SignupPage = () => {
 
   const handleSubmit = async () => {
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        userInfo
-      );
+      const res = await api.post("/auth/register", userInfo);
 
       navigate("/login", {
         state: { message: "Registration successful! Please log in." },
@@ -67,6 +70,8 @@ const SignupPage = () => {
       );
     }
   };
+
+  if(verify) return null;
 
   return (
     <>

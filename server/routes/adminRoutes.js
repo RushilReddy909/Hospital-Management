@@ -87,11 +87,16 @@ const doctorValidation = [
     .notEmpty()
     .withMessage("Phone number is required"),
   body("gender")
+    .isString()
     .isIn(["Male", "Female"])
     .withMessage("Gender must be either Male or Female"),
   body("age")
     .isInt({ min: 1, max: 120 })
     .withMessage("Age must be a positive integer"),
+  body("status")
+    .isString()
+    .isIn(["Active", "Away"])
+    .withMessage("status should be Active or Away"),
 ];
 
 //Verify Admin

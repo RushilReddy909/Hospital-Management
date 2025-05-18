@@ -12,6 +12,7 @@ const getUserInfo = async (req, res) => {
       data: {
         name: userData.name,
         email: userData.email,
+        role: userData.role,
       },
     });
   } catch (err) {
