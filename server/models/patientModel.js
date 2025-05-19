@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const patientSchema = new mongoose.Schema(
   {
-    userID: {
+    patientID: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "users",
       required: true,
@@ -40,6 +40,26 @@ const patientSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+patientSchema.post("save", async (pat, next) => {
+  try {
+    await mongoose.model("users").findByIdAndUpdate(pat.patientID, {
+      $set: { role: "patient" },
+    });
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+patientSchema.post('findOneAndDelete', async (pat) => {
+  if (pat) {
+    // Example: Update user's role back to 'user'
+    await userModel.findByIdAndUpdate(pat.patientID, {
+      $set: { role: 'user' },
+    });
+  }
+});
 
 const patientModel = mongoose.model("patients", patientSchema);
 

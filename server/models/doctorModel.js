@@ -43,6 +43,26 @@ const doctorSchema = new mongoose.Schema(
   }
 );
 
+doctorSchema.post("save", async (doc, next) => {
+  try {
+    await mongoose.model("users").findByIdAndUpdate(doc.doctorID, {
+      $set: { role: "doctor" },
+    });
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+doctorSchema.post("findOneAndDelete", async (doc) => {
+  if (doc) {
+    // Example: Update user's role back to 'user'
+    await userModel.findByIdAndUpdate(doc.doctorID, {
+      $set: { role: "user" },
+    });
+  }
+});
+
 const doctorModel = mongoose.model("doctors", doctorSchema);
 
 export default doctorModel;

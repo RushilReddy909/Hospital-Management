@@ -11,15 +11,15 @@ const upsertSelfPatient = async (req, res) => {
       .json({ success: false, errors: errors.array().map((e) => e.msg) });
   }
 
-  const userID = req.user.id;
+  const patientID = req.user.id;
 
   try {
-    let patient = await patientModel.findOneAndUpdate({ userID }, req.body, {
+    let patient = await patientModel.findOneAndUpdate({ patientID }, req.body, {
       new: true,
     });
 
     if (!patient) {
-      const newPatient = new patientModel({ ...req.body, userID });
+      const newPatient = new patientModel({ ...req.body, patientID });
       patient = await newPatient.save();
 
       return res.status(201).json({
@@ -45,7 +45,7 @@ const upsertSelfPatient = async (req, res) => {
 
 const getSelfPatient = async (req, res) => {
   try {
-    const patient = await patientModel.findOne({ userID: req.user.id });
+    const patient = await patientModel.findOne({ patientID: req.user.id });
     if (!patient) {
       return res
         .status(404)
@@ -119,7 +119,7 @@ const getPatient = async (req, res) => {
 
   try {
     const patient = await patientModel.findOne({
-      userID: new mongoose.Types.ObjectId(id),
+      patientID: new mongoose.Types.ObjectId(id),
     });
 
     if (!patient) {
@@ -162,7 +162,7 @@ const updatePatient = async (req, res) => {
 
   try {
     const updated = await patientModel.findOneAndUpdate(
-      { userID: new mongoose.Types.ObjectId(id) },
+      { patientID: new mongoose.Types.ObjectId(id) },
       req.body,
       {
         new: true,
@@ -195,7 +195,7 @@ const deletePatient = async (req, res) => {
 
   try {
     await patientModel.findOneAndDelete({
-      userID: new mongoose.Types.ObjectId(id),
+      patientID: new mongoose.Types.ObjectId(id),
     });
     res.status(200).json({
       success: true,

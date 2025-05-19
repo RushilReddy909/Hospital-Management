@@ -8,37 +8,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import React, { useEffect, useMemo, useState } from "react";
-import { admin } from "@/utils/api";
+import React, { useMemo } from "react";
 import PieChart from "@/components/graphs/PieGraph";
 import BarGraph from "@/components/graphs/BarGraph";
 import AreaGraph from "@/components/graphs/AreaGraph";
 import { TrendingDown, TrendingUp } from "lucide-react";
+import useAdminStore from "@/store/adminStore";
 
 const Analytics = () => {
-  const [doctors, setDoctors] = useState([]);
-  const [patients, setPatients] = useState([]);
-  const [users, setUsers] = useState([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [doctorsRes, patientsRes, usersRes] = await Promise.all([
-          admin.get("/doctors"),
-          admin.get("/patients"),
-          admin.get("/users"),
-        ]);
-
-        setDoctors(doctorsRes.data.data);
-        setPatients(patientsRes.data.data);
-        setUsers(usersRes.data.data);
-      } catch (err) {
-        console.error("Error occurred:", err);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const doctors = useAdminStore((state) => state.doctors);
+  const patients = useAdminStore((state) => state.patients);
+  const users = useAdminStore((state) => state.users);
 
   const pieData = useMemo(
     () => [

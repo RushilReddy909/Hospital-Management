@@ -22,15 +22,22 @@ import {
   Settings,
   Users,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Analytics from "./admin/Analytics";
 import UserManagement from "./admin/UserManagement";
 import Appointments from "./admin/Appointments";
 import Log from "./admin/Logs";
 import Records from "./admin/Records";
 import { useNavigate } from "react-router-dom";
+import useAdminStore from "@/store/adminStore";
 
 const Admin = () => {
+  const fetchAll = useAdminStore((state) => state.fetchAll);
+
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
   const navigate = useNavigate();
   const [component, setComponent] = useState(<Analytics />);
   const menu = [
@@ -39,23 +46,14 @@ const Admin = () => {
       icon: ChartNoAxesCombined,
       component: <Analytics />,
     },
-    { title: "User Management", 
-      icon: Users, 
-      component: <UserManagement /> 
-    },
+    { title: "User Management", icon: Users, component: <UserManagement /> },
     {
       title: "Manage Appointments",
       icon: ClipboardPlus,
       component: <Appointments />,
     },
-    { title: "Medical Records", 
-      icon: Archive, 
-      component: <Records /> 
-    },
-    { title: "Server Logs", 
-      icon: Logs, 
-      component: <Log /> 
-    },
+    { title: "Medical Records", icon: Archive, component: <Records /> },
+    { title: "Server Logs", icon: Logs, component: <Log /> },
   ];
 
   return (
