@@ -139,8 +139,8 @@ const Profile = () => {
                   variant="secondary"
                   className="text-zinc-500 flex items-center gap-1 cursor-pointer"
                   onClick={() => {
-                    if (details.userID) {
-                      navigator.clipboard.writeText(details.userID);
+                    if (details.patientID) {
+                      navigator.clipboard.writeText(details.patientID);
                       toast.success("Copied to clipboard", {
                         position: "bottom-right",
                         autoClose: 2000,
@@ -154,8 +154,8 @@ const Profile = () => {
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger asChild>
                         <div className="flex gap-1 not-hover:text-transparent">
-                          {details.userID || "Invalid"}
-                          {details.userID && <Copy className="h-4 w-4 ml-1" />}
+                          {details.patientID || "Invalid"}
+                          {details.patientID && <Copy className="h-4 w-4 ml-1" />}
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>

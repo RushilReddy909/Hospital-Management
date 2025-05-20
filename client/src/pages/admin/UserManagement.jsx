@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ToastContainer } from "react-toastify";
+import { Slide, toast, ToastContainer } from "react-toastify";
 import {
   Select,
   SelectContent,
@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import DoctorDialog from "@/components/dialogs/DoctorDialog";
 import { admin } from "@/utils/api";
+import PatientDialog from "@/components/dialogs/PatientDialog";
 
 const UserManagement = () => {
   const [data, setData] = useState([]);
@@ -49,7 +50,9 @@ const UserManagement = () => {
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [newRole, setNewRole] = useState(null);
-  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [roleData, setRoleData] = useState(null);
+  const [viewOnly, setViewOnly] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,9 +63,19 @@ const UserManagement = () => {
         console.log(`${err}`);
       }
     };
-
     fetchData();
   }, []);
+
+  const fetchRoleData = async (user) => {
+    if (!user) return;
+    try {
+      const res = await admin(`/${user.role}s/${user._id}`);
+      setRoleData(res.data.data);
+      setModalOpen(true);
+    } catch (err) {
+      toast.error("Error fetching Data");
+    }
+  };
 
   const columns = [
     {
@@ -75,7 +88,7 @@ const UserManagement = () => {
       header: ({ column }) => (
         <Button
           variant="ghost"
-          className={"font-semibold"}
+          className="font-semibold"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Email
@@ -92,10 +105,11 @@ const UserManagement = () => {
 
         const handleRoleChange = (newRole) => {
           if (newRole === currentUser.role) return;
-
-          setSelectedUser(currentUser); // Store old user for deletion
-          setNewRole(newRole); // Set target role
-          setRoleDialogOpen(true); // Open modal
+          setSelectedUser(currentUser);
+          setNewRole(newRole);
+          setViewOnly(false);
+          setRoleData(null);
+          setModalOpen(true);
         };
 
         return (
@@ -105,9 +119,7 @@ const UserManagement = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectLabel className={"font-semibold"}>
-                  Update Role
-                </SelectLabel>
+                <SelectLabel className="font-semibold">Update Role</SelectLabel>
                 <SelectSeparator />
                 {["admin", "doctor", "patient"].map((role) => (
                   <SelectItem key={role} value={role}>
@@ -132,21 +144,31 @@ const UserManagement = () => {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant={"ghost"} className="h-8 w-8 p-0 shadow border">
+              <Button variant="ghost" className="h-8 w-8 p-0 shadow border">
                 <MoreHorizontal />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {/* <DropdownMenuLabel className={"font-semibold text-sm"}>
-                Actions
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator /> */}
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(row.original._id)}
+                onClick={() => {
+                  navigator.clipboard.writeText(row.original._id);
+                  toast.success("ID copied to clipboard");
+                }}
               >
                 Copy User ID
               </DropdownMenuItem>
-              <DropdownMenuItem>More Info</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={async () => {
+                  const user = row.original;
+                  setSelectedUser(user);
+                  setNewRole(row.original.role);
+                  setViewOnly(true);
+                  setRoleData(null);
+                  await fetchRoleData(user);
+                }}
+              >
+                More Info
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -173,8 +195,6 @@ const UserManagement = () => {
   return (
     <div className="w-full p-4">
       <h2 className="text-xl font-semibold mb-4">User Management</h2>
-
-      {/* Filters */}
       <div className="flex gap-4 mb-4">
         <Input
           placeholder="Filter by name"
@@ -194,7 +214,7 @@ const UserManagement = () => {
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button className={"font-semibold"}>
+            <Button className="font-semibold">
               Add User <Plus />
             </Button>
           </DropdownMenuTrigger>
@@ -208,14 +228,13 @@ const UserManagement = () => {
         </DropdownMenu>
       </div>
 
-      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead className={"font-semibold"} key={header.id}>
+                  <TableHead className="font-semibold" key={header.id}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -255,7 +274,6 @@ const UserManagement = () => {
         </Table>
       </div>
 
-      {/* Pagination */}
       <div className="flex justify-end gap-2 mt-4">
         <Button
           variant="outline"
@@ -275,12 +293,43 @@ const UserManagement = () => {
         </Button>
       </div>
 
-      <ToastContainer limit={3} />
+      <ToastContainer
+        limit={3}
+        position="top-center"
+        autoClose={2500}
+        hideProgressBar
+        theme="colored"
+        pauseOnFocusLoss={false}
+        pauseOnHover={false}
+        closeOnClick
+        transition={Slide}
+      />
+
       {newRole === "doctor" && (
         <DoctorDialog
-          open={roleDialogOpen}
-          setOpen={setRoleDialogOpen}
+          open={modalOpen}
+          setOpen={setModalOpen}
           oldUser={selectedUser}
+          roleData={roleData}
+          viewOnly={viewOnly}
+        />
+      )}
+      {newRole === "patient" && (
+        <PatientDialog
+          open={modalOpen}
+          setOpen={setModalOpen}
+          oldUser={selectedUser}
+          roleData={roleData}
+          viewOnly={viewOnly}
+        />
+      )}
+      {newRole === "admin" && (
+        <AdminDialog
+          open={modalOpen}
+          setOpen={setModalOpen}
+          oldUser={selectedUser}
+          roleData={roleData}
+          viewOnly={viewOnly}
         />
       )}
     </div>

@@ -119,7 +119,7 @@ const getPatient = async (req, res) => {
 
   try {
     const patient = await patientModel.findOne({
-      patientID: new mongoose.Types.ObjectId(id),
+      patientID: id,
     });
 
     if (!patient) {

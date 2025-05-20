@@ -21,39 +21,37 @@ import {
 } from "@/components/ui/select";
 import { admin } from "@/utils/api";
 import { toast } from "react-toastify";
+import { Textarea } from "../ui/textarea";
 
-const DoctorDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
+const PatientDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
   const [edit, setEdit] = useState(false);
   const [orgData, setOrgData] = useState(null);
   const [formData, setFormData] = useState({
-    doctorID: "",
+    patientID: "",
     name: "",
     phone: "",
     gender: "",
     age: "",
-    specialization: "",
-    status: "",
+    description: "",
   });
 
   useEffect(() => {
     const dat = roleData
       ? {
-          doctorID: roleData.doctorID || "",
+          patientID: roleData.patientID || "",
           name: roleData.name || "",
           phone: roleData.phone || "",
           gender: roleData.gender || "",
           age: roleData.age || "",
-          specialization: roleData.specialization || "",
-          status: roleData.status || "",
+          description: roleData.description || "",
         }
       : {
-          doctorID: oldUser._id || "",
+          patientID: oldUser._id || "",
           name: "",
           phone: "",
           gender: "",
           age: "",
-          specialization: "",
-          status: "",
+          description: "",
         };
 
     setFormData(dat);
@@ -71,7 +69,7 @@ const DoctorDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
   const handleSubmit = async () => {
     if (viewOnly) {
       try {
-        await admin.put(`/doctors/${orgData.doctorID}`, formData);
+        await admin.put(`/patients/${orgData.patientID}`, formData);
         toast.success("Succesfully updated");
       } catch (err) {
         toast.error("Error updating");
@@ -80,7 +78,7 @@ const DoctorDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
     } else {
       try {
         await admin.delete(`${oldUser.role}s/${oldUser._id}`);
-        await admin.post("/doctors", formData);
+        await admin.post("/patients", formData);
         toast.success("Succesfully added");
       } catch (err) {
         toast.error("Error adding");
@@ -93,7 +91,7 @@ const DoctorDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Doctor Details</DialogTitle>
+          <DialogTitle>Patient Details</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
@@ -150,32 +148,12 @@ const DoctorDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
             </div>
           </div>
           <div className="flex gap-2">
-            <div className="w-5/8">
-              <Label className="mb-1.5">Specialization</Label>
-              <Input
-                value={formData.specialization}
-                onChange={(e) => handleChange("specialization", e.target.value)}
-                placeholder="e.g. Cardiologist"
-                required
-                disabled={!edit}
-              />
-            </div>
-            <div className="w-3/8">
-              <Label className="mb-1.5">Status</Label>
-              <Select
-                onValueChange={(val) => handleChange("status", val)}
-                value={formData.status}
-                disabled={!edit}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Away">Away</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Textarea
+              placeholder="Enter patient description"
+              disabled={!edit}
+              value={formData.description}
+              onChange={(e) => handleChange("description", e.target.value)}
+            />
           </div>
         </div>
         <DialogFooter>
@@ -212,4 +190,4 @@ const DoctorDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
   );
 };
 
-export default DoctorDialog;
+export default PatientDialog;
