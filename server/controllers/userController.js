@@ -6,6 +6,14 @@ const getUserInfo = async (req, res) => {
 
   try {
     const userData = await authModel.findById(id);
+    if (!userData) {
+      return res.status(404).json({
+        success: false,
+        message: "Record not found",
+        error: err,
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "Info retrieved",
@@ -45,6 +53,14 @@ const getUser = async (req, res) => {
 
   try {
     const data = await authModel.findById(id);
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        message: "Record not found",
+        error: err,
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "User retrieved",

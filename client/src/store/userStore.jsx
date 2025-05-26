@@ -21,3 +21,5 @@ const useUserStore = create((set, get) => ({
 
   clearUser: () => set({ user: null, roleData: null }),
 }));
+
+export default useUserStore;

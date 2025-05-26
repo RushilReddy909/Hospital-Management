@@ -57,7 +57,7 @@ doctorSchema.post("save", async (doc, next) => {
 doctorSchema.post("findOneAndDelete", async (doc) => {
   if (doc) {
     // Example: Update user's role back to 'user'
-    await userModel.findByIdAndUpdate(doc.doctorID, {
+    await mongoose.model("users").findByIdAndUpdate(doc.doctorID, {
       $set: { role: "user" },
     });
   }

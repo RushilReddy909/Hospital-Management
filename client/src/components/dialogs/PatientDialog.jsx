@@ -1,6 +1,6 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
@@ -11,79 +11,102 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
+  SelectTrigger,
   SelectContent,
   SelectItem,
-  SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { admin } from "@/utils/api";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "react-toastify";
-import { Textarea } from "../ui/textarea";
+import { admin } from "@/utils/api";
+import { z } from "zod";
 
-const PatientDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
+const patientSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  phone: z
+    .string()
+    .min(10, "Phone number must be 10 digits")
+    .max(10, "Phone number must be 10 digits")
+    .regex(/^\d+$/, "Phone number must contain only digits"),
+  gender: z.enum(["Male", "Female"], {
+    errorMap: () => ({ message: "Select gender" }),
+  }),
+  age: z.number().min(1, "Age must be at least 1"),
+  description: z.string().min(1, "Description is required"),
+});
+
+const PatientDialog = ({
+  open,
+  setOpen,
+  oldUser,
+  roleData,
+  viewOnly,
+  callBack,
+}) => {
   const [edit, setEdit] = useState(false);
-  const [orgData, setOrgData] = useState(null);
-  const [formData, setFormData] = useState({
-    patientID: "",
-    name: "",
-    phone: "",
-    gender: "",
-    age: "",
-    description: "",
+
+  const form = useForm({
+    resolver: zodResolver(patientSchema),
+    defaultValues: {
+      name: "",
+      phone: "",
+      gender: "",
+      age: undefined,
+      description: "",
+    },
   });
 
+  // Reset form on open/roleData change
   useEffect(() => {
-    const dat = roleData
-      ? {
-          patientID: roleData.patientID || "",
-          name: roleData.name || "",
-          phone: roleData.phone || "",
-          gender: roleData.gender || "",
-          age: roleData.age || "",
-          description: roleData.description || "",
-        }
-      : {
-          patientID: oldUser._id || "",
-          name: "",
-          phone: "",
-          gender: "",
-          age: "",
-          description: "",
-        };
-
-    setFormData(dat);
-    setOrgData(dat);
-    setEdit(!viewOnly);
-  }, [oldUser, open]);
-
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleSubmit = async () => {
-    if (viewOnly) {
-      try {
-        await admin.put(`/patients/${orgData.patientID}`, formData);
-        toast.success("Succesfully updated");
-      } catch (err) {
-        toast.error("Error updating");
-        console.log(err);
-      }
+    if (roleData) {
+      form.reset({
+        name: roleData.name || "",
+        phone: roleData.phone || "",
+        gender: roleData.gender || "",
+        age: roleData.age || undefined,
+        description: roleData.description || "",
+      });
     } else {
-      try {
-        await admin.delete(`${oldUser.role}s/${oldUser._id}`);
-        await admin.post("/patients", formData);
-        toast.success("Succesfully added");
-      } catch (err) {
-        toast.error("Error adding");
-        console.log(err);
+      form.reset({
+        name: "",
+        phone: "",
+        gender: "",
+        age: undefined,
+        description: "",
+      });
+    }
+    setEdit(!viewOnly);
+  }, [roleData, open, viewOnly, form]);
+
+  const onSubmit = async (data) => {
+    try {
+      if (viewOnly) {
+        await admin.put(`/patients/${roleData.patientID}`, data);
+        toast.success("Successfully updated");
+      } else {
+        if (["user", "admin"].includes(oldUser.role)) {
+          await admin.put(`/users/${oldUser._id}`, { role: "patient" });
+        } else {
+          await admin.delete(`${oldUser.role}s/${oldUser._id}`);
+        }
+        await admin.post("/patients", data);
+        toast.success("Successfully added");
       }
+      setOpen(false);
+      callBack();
+    } catch (err) {
+      toast.error("Error submitting data");
+      console.error(err);
     }
   };
 
@@ -94,93 +117,128 @@ const PatientDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
           <DialogTitle>Patient Details</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div>
-            <Label className="mb-1.5">Name</Label>
-            <Input
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              placeholder="Full Name"
-              required
-              disabled={!edit}
+        <Form {...form}>
+          <form className="grid gap-4 py-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      disabled={!edit}
+                      placeholder="Full Name"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div>
-            <Label className="mb-1.5">Phone</Label>
-            <Input
-              value={formData.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-              placeholder="Phone Number"
-              minLength={10}
-              maxLength={10}
-              required
-              disabled={!edit}
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      disabled={!edit}
+                      placeholder="Phone Number"
+                      maxLength={10}
+                      minLength={10}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="flex justify-between gap-2">
-            <div className="w-1/2">
-              <Label className="mb-1.5">Gender</Label>
-              <Select
-                onValueChange={(val) => handleChange("gender", val)}
-                value={formData.gender}
-                disabled={!edit}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Gender" />
-                </SelectTrigger>
-                <SelectContent className="w-full">
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-1/2">
-              <Label className="mb-1.5">Age</Label>
-              <Input
-                type="number"
-                value={formData.age}
-                onChange={(e) => handleChange("age", e.target.value)}
-                placeholder="Age"
-                min={1}
-                required
-                disabled={!edit}
+
+            <div className="flex gap-4">
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Gender</FormLabel>
+                    <Select
+                      disabled={!edit}
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <SelectTrigger className={"w-full"}>
+                        <SelectValue placeholder="Select Gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Age</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        disabled={!edit}
+                        type="number"
+                        min={1}
+                        placeholder="Age"
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Textarea
-              placeholder="Enter patient description"
-              disabled={!edit}
-              value={formData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      disabled={!edit}
+                      placeholder="Enter patient description"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-        </div>
+          </form>
+        </Form>
         <DialogFooter>
           <DialogClose asChild>
             <Button
-              className="font-semibold"
               type="button"
               variant="outline"
               onClick={() => {
-                if (edit) {
-                  setFormData(orgData); // Reset changes
-                }
+                if (edit) reset();
               }}
             >
               {edit ? "Cancel" : "Close"}
             </Button>
           </DialogClose>
-
           <Button
-            className="font-semibold"
-            onClick={() => {
-              if (!edit) {
-                setEdit(true); // Enable editing
-              } else {
-                handleSubmit(); // Submit data
-              }
-            }}
+            type="button"
+            className={"font-semibold"}
+            onClick={edit ? form.handleSubmit(onSubmit) : () => setEdit(true)}
           >
             {edit ? "Save" : "Update"}
           </Button>

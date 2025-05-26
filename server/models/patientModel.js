@@ -27,7 +27,7 @@ const patientSchema = new mongoose.Schema(
     phone: {
       type: String,
       required: true,
-      match: /^[6-9]\d{9}$/,
+      match: /^\d+$/,
       unique: true,
     },
     description: {
@@ -52,11 +52,11 @@ patientSchema.post("save", async (pat, next) => {
   }
 });
 
-patientSchema.post('findOneAndDelete', async (pat) => {
+patientSchema.post("findOneAndDelete", async (pat) => {
   if (pat) {
     // Example: Update user's role back to 'user'
-    await userModel.findByIdAndUpdate(pat.patientID, {
-      $set: { role: 'user' },
+    await mongoose.model("users").findByIdAndUpdate(pat.patientID, {
+      $set: { role: "user" },
     });
   }
 });

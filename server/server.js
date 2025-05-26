@@ -19,7 +19,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/patient", patientRoutes);
-app.use("/admin", adminRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.listen(PORT, () => {
   connectDB();

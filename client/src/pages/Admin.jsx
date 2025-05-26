@@ -30,12 +30,17 @@ import Log from "./admin/Logs";
 import Records from "./admin/Records";
 import { useNavigate } from "react-router-dom";
 import useAdminStore from "@/store/adminStore";
+import { Slide, ToastContainer } from "react-toastify";
 
 const Admin = () => {
-  const fetchAll = useAdminStore((state) => state.fetchAll);
+  const fetchPatients = useAdminStore((state) => state.fetchPatients);
+  const fetchDoctors = useAdminStore((state) => state.fetchDoctors);
+  const fetchUsers = useAdminStore((state) => state.fetchUsers);
 
   useEffect(() => {
-    fetchAll();
+    fetchPatients();
+    fetchDoctors();
+    fetchUsers();
   }, []);
 
   const navigate = useNavigate();
@@ -126,6 +131,20 @@ const Admin = () => {
           <main className="h-full">{component}</main>
         </SidebarInset>
       </SidebarProvider>
+      <ToastContainer
+        position="top-center"
+        autoClose={4000}
+        limit={4}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss={false}
+        draggable={false}
+        pauseOnHover
+        theme="colored"
+        transition={Slide}
+      />
     </>
   );
 };

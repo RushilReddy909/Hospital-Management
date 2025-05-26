@@ -16,7 +16,7 @@ api.interceptors.request.use(
 );
 
 const admin = axios.create({
-  baseURL: "http://localhost:5000/admin",
+  baseURL: "http://localhost:5000/api/admin",
 });
 
 admin.interceptors.request.use(

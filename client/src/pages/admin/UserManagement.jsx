@@ -40,10 +40,14 @@ import {
 } from "@/components/ui/select";
 import DoctorDialog from "@/components/dialogs/DoctorDialog";
 import { admin } from "@/utils/api";
+import useAdminStore from "@/store/adminStore";
 import PatientDialog from "@/components/dialogs/PatientDialog";
+import AdminDialog from "@/components/dialogs/AdminDialog";
+import UserDialog from "@/components/dialogs/UserDialog";
 
 const UserManagement = () => {
-  const [data, setData] = useState([]);
+  const data = useAdminStore((state) => state.users);
+  const fetchAll = useAdminStore((state) => state.fetchAll);
   const [columnFilters, setColumnFilters] = useState([]);
   const [sorting, setSorting] = useState([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -55,25 +59,35 @@ const UserManagement = () => {
   const [viewOnly, setViewOnly] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await admin.get("/users");
-        setData(res.data.data);
-      } catch (err) {
-        console.log(`${err}`);
-      }
-    };
-    fetchData();
-  }, []);
+    fetchAll();
+  }, [fetchAll]);
 
   const fetchRoleData = async (user) => {
     if (!user) return;
     try {
-      const res = await admin(`/${user.role}s/${user._id}`);
+      const res = await admin.get(`/${user.role}s/${user._id}`);
       setRoleData(res.data.data);
       setModalOpen(true);
     } catch (err) {
-      toast.error("Error fetching Data");
+      if (err?.response?.status === 404) {
+        toast.error(
+          `${
+            user.role.charAt(0).toUpperCase() + user.role.slice(1)
+          } Record does not Exist`
+        );
+      } else {
+        toast.error("Error fetching Data");
+      }
+    }
+  };
+
+  const fetchUserData = async (user) => {
+    try {
+      const res = await admin.get(`/users/${user._id}`);
+      setRoleData(res.data.data);
+      setModalOpen(true);
+    } catch (err) {
+      toast.error("Error occurred while fetching data");
     }
   };
 
@@ -167,7 +181,18 @@ const UserManagement = () => {
                   await fetchRoleData(user);
                 }}
               >
-                More Info
+                Role Info
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={async () => {
+                  const user = row.original;
+                  setSelectedUser(user);
+                  setNewRole("user");
+                  setViewOnly(true);
+                  await fetchUserData(user);
+                }}
+              >
+                User Auth Info
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -312,6 +337,7 @@ const UserManagement = () => {
           oldUser={selectedUser}
           roleData={roleData}
           viewOnly={viewOnly}
+          callBack={fetchAll}
         />
       )}
       {newRole === "patient" && (
@@ -321,6 +347,7 @@ const UserManagement = () => {
           oldUser={selectedUser}
           roleData={roleData}
           viewOnly={viewOnly}
+          callBack={fetchAll}
         />
       )}
       {newRole === "admin" && (
@@ -328,8 +355,17 @@ const UserManagement = () => {
           open={modalOpen}
           setOpen={setModalOpen}
           oldUser={selectedUser}
+          callBack={fetchAll}
+        />
+      )}
+      {newRole == "user" && (
+        <UserDialog
+          open={modalOpen}
+          setOpen={setModalOpen}
+          oldUser={selectedUser}
           roleData={roleData}
           viewOnly={viewOnly}
+          callBack={fetchAll}
         />
       )}
     </div>

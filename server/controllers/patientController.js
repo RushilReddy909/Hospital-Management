@@ -123,7 +123,7 @@ const getPatient = async (req, res) => {
     });
 
     if (!patient) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
         message: "Couldn't find patient",
       });
@@ -195,7 +195,7 @@ const deletePatient = async (req, res) => {
 
   try {
     await patientModel.findOneAndDelete({
-      patientID: new mongoose.Types.ObjectId(id),
+      patientID: id,
     });
     res.status(200).json({
       success: true,

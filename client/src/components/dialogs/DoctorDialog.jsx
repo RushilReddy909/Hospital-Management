@@ -11,7 +11,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -19,21 +26,71 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { admin } from "@/utils/api";
 import { toast } from "react-toastify";
 
-const DoctorDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
+const doctorSchema = z.object({
+  doctorID: z.string().optional(),
+
+  name: z
+    .string({ required_error: "Name is required" })
+    .min(1, "Name is required"),
+
+  phone: z
+    .string({ required_error: "Phone number is required" })
+    .length(10, "Phone must be exactly 10 digits")
+    .regex(/^\d+$/, "Phone must contain digits only"),
+
+  gender: z.enum(["Male", "Female"], {
+    required_error: "Gender is required",
+  }),
+
+  age: z
+    .union([
+      z.string({ required_error: "Age is required" }),
+      z.number({ required_error: "Age is required" }),
+    ])
+    .transform((val) => Number(val))
+    .refine((val) => !isNaN(val) && val >= 1, {
+      message: "Age must be a number greater than or equal to 1",
+    }),
+
+  specialization: z
+    .string({ required_error: "Specialization is required" })
+    .min(1, "Specialization is required"),
+
+  status: z.enum(["Active", "Away"], {
+    required_error: "Status is required",
+  }),
+});
+
+const DoctorDialog = ({
+  open,
+  setOpen,
+  oldUser,
+  roleData,
+  viewOnly,
+  callBack,
+}) => {
   const [edit, setEdit] = useState(false);
-  const [orgData, setOrgData] = useState(null);
-  const [formData, setFormData] = useState({
-    doctorID: "",
-    name: "",
-    phone: "",
-    gender: "",
-    age: "",
-    specialization: "",
-    status: "",
+
+  const form = useForm({
+    resolver: zodResolver(doctorSchema),
+    defaultValues: {
+      doctorID: "",
+      name: "",
+      phone: "",
+      gender: "",
+      age: "",
+      specialization: "",
+      status: "",
+    },
   });
+
+  const { handleSubmit, reset, control } = form;
 
   useEffect(() => {
     const dat = roleData
@@ -56,36 +113,30 @@ const DoctorDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
           status: "",
         };
 
-    setFormData(dat);
-    setOrgData(dat);
+    reset(dat);
     setEdit(!viewOnly);
-  }, [oldUser, open]);
+  }, [open, oldUser, reset, roleData, viewOnly]);
 
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  const onSubmit = async (data) => {
+    try {
+      if (viewOnly) {
+        await admin.put(`/doctors/${data.doctorID}`, data);
+        toast.success("Successfully updated");
+      } else {
+        if (["user", "admin"].includes(oldUser.role)) {
+          await admin.put(`/users/${oldUser._id}`, { role: "doctor" });
+        } else {
+          await admin.delete(`${oldUser.role}s/${oldUser._id}`);
+        }
+        await admin.post("/doctors", data);
+        toast.success("Successfully added");
+      }
 
-  const handleSubmit = async () => {
-    if (viewOnly) {
-      try {
-        await admin.put(`/doctors/${orgData.doctorID}`, formData);
-        toast.success("Succesfully updated");
-      } catch (err) {
-        toast.error("Error updating");
-        console.log(err);
-      }
-    } else {
-      try {
-        await admin.delete(`${oldUser.role}s/${oldUser._id}`);
-        await admin.post("/doctors", formData);
-        toast.success("Succesfully added");
-      } catch (err) {
-        toast.error("Error adding");
-        console.log(err);
-      }
+      setOpen(false);
+      callBack();
+    } catch (err) {
+      toast.error("Error saving doctor");
+      console.error(err);
     }
   };
 
@@ -96,113 +147,155 @@ const DoctorDialog = ({ open, setOpen, oldUser, roleData, viewOnly }) => {
           <DialogTitle>Doctor Details</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div>
-            <Label className="mb-1.5">Name</Label>
-            <Input
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              placeholder="Full Name"
-              required
-              disabled={!edit}
+        <Form {...form}>
+          <form className="grid gap-4 pt-4 pb-0">
+            <FormField
+              control={control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Full Name"
+                      disabled={!edit}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div>
-            <Label className="mb-1.5">Phone</Label>
-            <Input
-              value={formData.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-              placeholder="Phone Number"
-              minLength={10}
-              maxLength={10}
-              required
-              disabled={!edit}
+
+            <FormField
+              control={control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Phone Number"
+                      disabled={!edit}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="flex justify-between gap-2">
-            <div className="w-1/2">
-              <Label className="mb-1.5">Gender</Label>
-              <Select
-                onValueChange={(val) => handleChange("gender", val)}
-                value={formData.gender}
-                disabled={!edit}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Gender" />
-                </SelectTrigger>
-                <SelectContent className="w-full">
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-1/2">
-              <Label className="mb-1.5">Age</Label>
-              <Input
-                type="number"
-                value={formData.age}
-                onChange={(e) => handleChange("age", e.target.value)}
-                placeholder="Age"
-                min={1}
-                required
-                disabled={!edit}
+
+            <div className="flex justify-between gap-2">
+              <FormField
+                control={control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem className="w-1/2">
+                    <FormLabel>Gender</FormLabel>
+                    <Select
+                      disabled={!edit}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className={"w-full"}>
+                          <SelectValue placeholder="Select Gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem className="w-1/2">
+                    <FormLabel>Age</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Age"
+                        disabled={!edit}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-          </div>
-          <div className="flex gap-2">
-            <div className="w-5/8">
-              <Label className="mb-1.5">Specialization</Label>
-              <Input
-                value={formData.specialization}
-                onChange={(e) => handleChange("specialization", e.target.value)}
-                placeholder="e.g. Cardiologist"
-                required
-                disabled={!edit}
+
+            <div className="flex gap-2">
+              <FormField
+                control={control}
+                name="specialization"
+                render={({ field }) => (
+                  <FormItem className="w-5/8">
+                    <FormLabel>Specialization</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g. Cardiologist"
+                        disabled={!edit}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem className="w-3/8">
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      disabled={!edit}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className={"w-full"}>
+                          <SelectValue placeholder="Select Status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Away">Away</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            <div className="w-3/8">
-              <Label className="mb-1.5">Status</Label>
-              <Select
-                onValueChange={(val) => handleChange("status", val)}
-                value={formData.status}
-                disabled={!edit}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Away">Away</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
+          </form>
+        </Form>
         <DialogFooter>
           <DialogClose asChild>
             <Button
-              className="font-semibold"
               type="button"
               variant="outline"
+              className="font-semibold"
               onClick={() => {
-                if (edit) {
-                  setFormData(orgData); // Reset changes
-                }
+                if (edit) reset();
               }}
             >
               {edit ? "Cancel" : "Close"}
             </Button>
           </DialogClose>
-
           <Button
-            className="font-semibold"
-            onClick={() => {
-              if (!edit) {
-                setEdit(true); // Enable editing
-              } else {
-                handleSubmit(); // Submit data
-              }
-            }}
+            type="button"
+            className={"font-semibold"}
+            onClick={edit ? handleSubmit(onSubmit) : () => setEdit(true)}
           >
             {edit ? "Save" : "Update"}
           </Button>
