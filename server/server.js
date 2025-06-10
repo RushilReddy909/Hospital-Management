@@ -6,6 +6,7 @@ import patientRoutes from "./routes/patientRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import cors from "cors";
+import appointmentRoutes from "./routes/appointmentRoutes.js";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/patient", patientRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/appointment", appointmentRoutes);
 
 app.listen(PORT, () => {
   connectDB();

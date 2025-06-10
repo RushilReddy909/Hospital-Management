@@ -144,7 +144,7 @@ const Analytics = () => {
               Total user count per month
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className={"p-5"}>
             <AreaGraph areaConfig={areaConfig} areaData={areaData} />
           </CardContent>
           <CardFooter className="text-md text-muted-foreground flex justify-center">

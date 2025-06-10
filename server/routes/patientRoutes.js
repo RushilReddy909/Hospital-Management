@@ -5,6 +5,7 @@ import {
 } from "../controllers/patientController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { body } from "express-validator";
+import { getAllDoctors } from "../controllers/doctorController.js";
 
 const router = express.Router();
 
@@ -44,5 +45,7 @@ const validation = [
 router.post("/", verifyToken, validation, upsertSelfPatient);
 
 router.get("/", verifyToken, getSelfPatient);
+
+router.get("/doctors", verifyToken, getAllDoctors);
 
 export default router;

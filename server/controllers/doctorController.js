@@ -24,6 +24,7 @@ const addDoctor = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Couldn't create doctor",
+      error: err,
     });
   }
 };
@@ -40,6 +41,7 @@ const getAllDoctors = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
+      error: err,
     });
   }
 };
@@ -65,6 +67,7 @@ const getDoctor = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Couldn't retrieve",
+      error: err,
     });
   }
 };
@@ -105,6 +108,7 @@ const updateDoctor = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server Error",
+      error: err,
     });
   }
 };
@@ -129,6 +133,7 @@ const deleteDoctor = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server Error",
+      error: err,
     });
   }
 };

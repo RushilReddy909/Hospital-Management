@@ -29,7 +29,7 @@ const hospital = {
 const items = [
   {
     title: "Book an Appointment",
-    url: "#",
+    url: "/appointment",
     icon: BriefcaseMedical,
   },
   {

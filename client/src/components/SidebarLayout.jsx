@@ -12,6 +12,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Outlet } from "react-router";
+import { Slide, ToastContainer } from "react-toastify";
 
 const months = [
   "January",
@@ -49,6 +50,20 @@ export default function Page() {
           </Breadcrumb>
         </header>
         <Outlet />
+        <ToastContainer
+          position="top-center"
+          autoClose={4000}
+          limit={4}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick={false}
+          rtl={false}
+          pauseOnFocusLoss={false}
+          draggable={false}
+          pauseOnHover
+          theme="colored"
+          transition={Slide}
+        />
       </SidebarInset>
     </SidebarProvider>
   );
