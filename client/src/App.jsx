@@ -9,6 +9,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminOnly from "./components/AdminOnly";
 import Admin from "./pages/Admin";
 import Appointments from "./pages/Appointments";
+import Doctors from "./pages/Doctors";
 
 const App = () => {
   return (
@@ -23,7 +24,8 @@ const App = () => {
         >
           <Route path="/" element={<Home />} />
           <Route path="/account" element={<Profile />} />
-          <Route path="/appointment" element={<Appointments />} />
+          <Route path="/appointments" element={<Appointments />} />
+          <Route path="/doctors" element={<Doctors />} />
         </Route>
         <Route element={<AdminOnly />}>
           <Route path="/admin" element={<Admin />} />

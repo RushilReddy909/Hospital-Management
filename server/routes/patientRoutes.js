@@ -46,6 +46,4 @@ router.post("/", verifyToken, validation, upsertSelfPatient);
 
 router.get("/", verifyToken, getSelfPatient);
 
-router.get("/doctors", verifyToken, getAllDoctors);
-
 export default router;

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { BriefcaseMedical, UsersRound } from "lucide-react";
+import { BriefcaseMedical, Home, UsersRound } from "lucide-react";
 import { DatePicker } from "@/components/date-picker";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -19,6 +19,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useEffect } from "react";
 import { api } from "@/utils/api";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const hospital = {
   name: "NeoCure Hospital",
@@ -28,13 +29,18 @@ const hospital = {
 
 const items = [
   {
+    title: "Home Page",
+    url: "/",
+    icon: Home
+  },
+  {
     title: "Book an Appointment",
-    url: "/appointment",
+    url: "/appointments",
     icon: BriefcaseMedical,
   },
   {
     title: "Our Doctors",
-    url: "#",
+    url: "/doctors",
     icon: UsersRound,
   },
 ];
@@ -69,7 +75,7 @@ export function AppSidebar({ ...props }) {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <a href="/">
+              <Link to="/">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={hospital.avatar} alt={hospital.name} />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
@@ -78,7 +84,7 @@ export function AppSidebar({ ...props }) {
                   <span className="truncate font-bold">{hospital.name}</span>
                   <span className="truncate text-xs">{hospital.desc}</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -97,10 +103,10 @@ export function AppSidebar({ ...props }) {
                       "p-5 font-semibold  hover:bg-green-500 hover:text-white transition-all"
                     }
                   >
-                    <a href={item.url}>
+                    <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

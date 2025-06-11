@@ -15,7 +15,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -45,16 +44,13 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select";  
 
 const schema = z.object({
-  date: z
-    .date({
-      required_error: "Date is required",
-    })
-    .refine((d) => d >= new Date(new Date().setHours(0, 0, 0, 0)), {
-      message: "Date cannot be in the past",
-    }),
+  doctorID: z.string(),
+  date: z.date().refine((d) => d >= new Date(new Date().setHours(0, 0, 0, 0)), {
+    message: "Date cannot be in the past",
+  }),
   reason: z.string().min(1, { message: "Reason cannot be empty" }),
   timeSlot: z.enum(["Morning", "Afternoon", "Evening"], {
     errorMap: () => ({ message: "Select a valid time slot" }),
@@ -62,13 +58,14 @@ const schema = z.object({
 });
 
 const Appointments = () => {
-  const [doctors, setDoctors] = useState(null);
+  const [doctors, setDoctors] = useState([]);
   const [open, setOpen] = useState(false);
-  const [doctor, setDoctor] = useState(null);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
 
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
+      doctorID: "",
       date: new Date(),
       reason: "",
       timeSlot: "Morning",
@@ -77,11 +74,7 @@ const Appointments = () => {
 
   const onSubmit = async (data) => {
     try {
-      const res = await api.post("/appointment", {
-        doctorID: doctor.doctorID,
-        ...data,
-      });
-
+      await api.post("/appointment", data);
       toast.success("Appointment scheduled successfully");
       setOpen(false);
     } catch (err) {
@@ -91,9 +84,9 @@ const Appointments = () => {
   };
 
   useEffect(() => {
-    const fetchDoctors = async (req, res) => {
+    const fetchDoctors = async () => {
       try {
-        const res = await api.get("/patient/doctors");
+        const res = await api.get("/doctor");
         setDoctors(res.data.data);
       } catch (err) {
         toast.error("Couldn't retrieve doctors");
@@ -105,188 +98,184 @@ const Appointments = () => {
   }, []);
 
   return (
-    <div className="flex justify-center h-full p-5">
-      {doctors && doctors.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
-          {doctors
-            .filter((doctor) => doctor.status === "Active")
-            .map((doctor) => (
-              <Card
-                key={doctor.doctorID}
-                className="p-4 shadow-md h-[250px] flex flex-col justify-between"
-              >
-                {/* Top: Info + Avatar */}
-                <div className="flex gap-4">
-                  {/* Left: Header + Content */}
-                  <div className="flex-1 w-[60%]">
-                    <CardHeader className="p-0">
-                      <CardTitle className="text-xl font-semibold">
-                        Dr. {doctor.name}
-                      </CardTitle>
-                      <CardDescription className="text-sm text-zinc-500">
-                        {doctor.specialization}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0 pt-2 text-sm space-y-1 text-zinc-600">
-                      <p>
-                        <span className="font-medium">Phone:</span>{" "}
-                        {doctor.phone}
-                      </p>
-                      <p>
-                        <span className="font-medium">Gender:</span>{" "}
-                        {doctor.gender}
-                      </p>
-                      <p>
-                        <span className="font-medium">Age:</span> {doctor.age}
-                      </p>
-                    </CardContent>
-                  </div>
-
-                  {/* Right: Avatar */}
-                  <div className="flex items-center justify-center w-[40%]">
-                    <AspectRatio ratio={1 / 1}>
-                      <Avatar className="w-full h-full flex items-center justify-center bg-muted">
-                        <AvatarFallback className="flex items-center justify-center w-full h-full">
-                          <User className="w-10 h-10 text-zinc-500" />
-                        </AvatarFallback>
-                      </Avatar>
-                    </AspectRatio>
-                  </div>
-                </div>
-
-                {/* Bottom: Common Footer */}
-                <CardFooter className="pt-4">
-                  <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogTrigger asChild>
-                      <Button
-                        onClick={() => {
-                          setDoctor(doctor);
-                          setOpen(true);
-                          form.reset();
-                        }}
-                        className={"w-full font-semibold"}
-                      >
-                        Book Appointment
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Confirm Appointment</DialogTitle>
-                        <DialogDescription>
-                          Fill in the details to schedule an appointment with
+    <div className="h-full p-5">
+      {doctors.length > 0 ? (
+        <>
+          <h1 className="pb-4 font-bold text-center text-2xl">Currently Active Doctors</h1>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
+            {doctors
+              .filter((doctor) => doctor.status === "Active")
+              .map((doctor) => (
+                <Card
+                  key={doctor.doctorID}
+                  className="p-4 shadow-md h-[250px] flex flex-col justify-between"
+                >
+                  <div className="flex gap-4">
+                    <div className="flex-1 w-[60%]">
+                      <CardHeader className="p-0">
+                        <CardTitle className="text-xl font-semibold">
                           Dr. {doctor.name}
-                        </DialogDescription>
-                      </DialogHeader>
+                        </CardTitle>
+                        <CardDescription className="text-sm text-zinc-500">
+                          {doctor.specialization}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-0 pt-2 text-sm space-y-1 text-zinc-600">
+                        <p>
+                          <span className="font-medium">Phone:</span>{" "}
+                          {doctor.phone}
+                        </p>
+                        <p>
+                          <span className="font-medium">Gender:</span>{" "}
+                          {doctor.gender}
+                        </p>
+                        <p>
+                          <span className="font-medium">Age:</span> {doctor.age}
+                        </p>
+                      </CardContent>
+                    </div>
+                    <div className="flex items-center justify-center w-[40%]">
+                      <AspectRatio ratio={1 / 1}>
+                        <Avatar className="w-full h-full flex items-center justify-center bg-muted">
+                          <AvatarFallback className="flex items-center justify-center w-full h-full">
+                            <User className="w-10 h-10 text-zinc-500" />
+                          </AvatarFallback>
+                        </Avatar>
+                      </AspectRatio>
+                    </div>
+                  </div>
+                  <CardFooter className="pt-4">
+                    <Button
+                      className="w-full font-semibold"
+                      onClick={() => {
+                        setSelectedDoctor(doctor);
+                        form.reset({
+                          doctorID: doctor.doctorID,
+                          date: new Date(),
+                          reason: "",
+                          timeSlot: "Morning",
+                        });
+                        setOpen(true);
+                      }}
+                    >
+                      Book Appointment
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+          </div>
 
-                      <Form {...form}>
-                        <form
-                          onSubmit={form.handleSubmit(onSubmit)}
-                          className="space-y-4"
-                        >
-                          <div className="flex flex-col md:flex-row gap-4 w-full">
-                            <FormField
-                              control={form.control}
-                              name="date"
-                              render={({ field }) => (
-                                <FormItem className="flex flex-col gap-3 w-1/2">
-                                  <FormLabel>Date of Appointment</FormLabel>
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <FormControl>
-                                        <Button
-                                          variant="outline"
-                                          id="date"
-                                          className="w-full justify-between font-normal"
-                                        >
-                                          {field.value
-                                            ? field.value.toLocaleDateString()
-                                            : "Select date"}
-                                          <ChevronDownIcon />
-                                        </Button>
-                                      </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent
-                                      className="w-auto overflow-hidden p-0"
-                                      align="start"
-                                    >
-                                      <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        captionLayout="dropdown"
-                                        onSelect={(date) => {
-                                          field.onChange(date);
-                                        }}
-                                      />
-                                    </PopoverContent>
-                                  </Popover>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="timeSlot"
-                              render={({ field }) => (
-                                <FormItem className="flex flex-col gap-3 w-1/2">
-                                  <FormLabel>Time Slot</FormLabel>
-                                  <FormControl>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                    >
-                                      <SelectTrigger className={"w-full"}>
-                                        <SelectValue placeholder="Select a time slot" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Morning">
-                                          Morning
-                                        </SelectItem>
-                                        <SelectItem value="Afternoon">
-                                          Afternoon
-                                        </SelectItem>
-                                        <SelectItem value="Evening">
-                                          Evening
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          <FormField
-                            control={form.control}
-                            name="reason"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Reason</FormLabel>
-                                <FormControl>
-                                  <Textarea
-                                    placeholder="Explain your symptoms or reason..."
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirm Appointment</DialogTitle>
+                <DialogDescription>
+                  {selectedDoctor
+                    ? `Fill in the details to schedule an appointment with Dr. ${selectedDoctor.name}`
+                    : ""}
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={form.control}
+                    name="doctorID"
+                    render={({ field }) => <input type="hidden" {...field} />}
+                  />
+                  <div className="flex flex-col md:flex-row gap-4 w-full">
+                    <FormField
+                      control={form.control}
+                      name="date"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col gap-3 w-1/2">
+                          <FormLabel>Date of Appointment</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-between font-normal"
+                                >
+                                  {field.value
+                                    ? field.value.toLocaleDateString()
+                                    : "Select date"}
+                                  <ChevronDownIcon />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto overflow-hidden p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                captionLayout="dropdown"
+                                onSelect={(date) => field.onChange(date)}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="timeSlot"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col gap-3 w-1/2">
+                          <FormLabel>Time Slot</FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select a time slot" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Morning">Morning</SelectItem>
+                                <SelectItem value="Afternoon">
+                                  Afternoon
+                                </SelectItem>
+                                <SelectItem value="Evening">Evening</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="reason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reason</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Explain your symptoms or reason..."
+                            {...field}
                           />
-
-                          <div className="w-full flex justify-end">
-                            <Button type="submit" className={"font-semibold"}>
-                              Confirm
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
-                </CardFooter>
-              </Card>
-            ))}
-        </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="w-full flex justify-end">
+                    <Button type="submit" className="font-semibold">
+                      Confirm
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </>
       ) : (
         <h1 className="text-2xl font-semibold">
           No doctors available, try again later

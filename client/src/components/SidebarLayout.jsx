@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Outlet } from "react-router";
 import { Slide, ToastContainer } from "react-toastify";
+import { ModeToggle } from "./mode-toggle";
 
 const months = [
   "January",
@@ -36,19 +37,28 @@ export default function Page() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 z-50">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbPage>
-                  {months[date.getMonth()]} {date.getFullYear()}
-                </BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+        <header className="sticky top-0 z-50 flex items-center justify-between h-16 border-b bg-background px-4">
+          {/* Left Section: Sidebar + Breadcrumb */}
+          <div className="flex items-center gap-3">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="h-6" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>
+                    {months[date.getMonth()]} {date.getFullYear()}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+
+          {/* Right Section: Theme Toggle */}
+          <div className="flex items-center">
+            <ModeToggle />
+          </div>
         </header>
+
         <Outlet />
         <ToastContainer
           position="top-center"

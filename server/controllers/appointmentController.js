@@ -72,10 +72,10 @@ const updateAppointment = async (req, res) => {
 };
 
 const getAppointment = async (req, res) => {
-  const patientID = req.user._id;
+  const patientID = req.user.id;
 
   try {
-    const appointment = await appointmentModel.find({patientID});
+    const appointment = await appointmentModel.find({ patientID });
 
     return res.status(200).json({
       success: true,

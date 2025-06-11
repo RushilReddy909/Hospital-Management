@@ -24,7 +24,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 export function NavUser({ user }) {
@@ -81,10 +81,10 @@ export function NavUser({ user }) {
             <DropdownMenuSeparator />
             <DropdownMenuGroup className="[&>*:not(:first-child):not(:last-child)]:my-1">
               <DropdownMenuItem asChild>
-                <a href="/account">
+                <Link to="/account">
                   <User />
                   Account
-                </a>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Phone />
@@ -97,14 +97,14 @@ export function NavUser({ user }) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem className={"p-0"} onClick={handleLogout}>
-              <a
-                href="#"
+              <Link
+                to="#"
                 onClick={handleLogout}
                 className="py-1.5 px-2 rounded-sm w-full hover:bg-red-500 hover:text-white transition-all font-semibold flex items-center gap-2 text-red-500"
               >
                 <LogOut className="text-inherit" />
                 Logout
-              </a>
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
