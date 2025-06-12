@@ -44,7 +44,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";  
+} from "@/components/ui/select";
 
 const schema = z.object({
   doctorID: z.string(),
@@ -101,7 +101,9 @@ const Appointments = () => {
     <div className="h-full p-5">
       {doctors.length > 0 ? (
         <>
-          <h1 className="pb-4 font-bold text-center text-2xl">Currently Active Doctors</h1>
+          <h1 className="pb-4 font-bold text-center text-2xl">
+            Currently Active Doctors
+          </h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
             {doctors
               .filter((doctor) => doctor.status === "Active")
@@ -150,7 +152,7 @@ const Appointments = () => {
                       onClick={() => {
                         setSelectedDoctor(doctor);
                         form.reset({
-                          doctorID: doctor.doctorID,
+                          doctorID: doctor._id,
                           date: new Date(),
                           reason: "",
                           timeSlot: "Morning",

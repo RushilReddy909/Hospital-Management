@@ -3,7 +3,13 @@ import { toast } from "react-toastify";
 import { api } from "@/utils/api";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Copy, Ellipsis, Siren } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -19,7 +25,6 @@ import {
 } from "@/components/ui/tooltip";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -49,6 +54,17 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { format } from "date-fns";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required").max(40),
@@ -70,6 +86,8 @@ const schema = z.object({
 const Account = () => {
   const [details, setDetails] = useState({});
   const [open, setOpen] = useState(false);
+  const [appointments, setAppointments] = useState([]);
+
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -100,6 +118,9 @@ const Account = () => {
       try {
         const res = await api.get("/patient");
         setDetails(res.data.data);
+
+        const appoint = await api.get("/appointment");
+        setAppointments(appoint.data.data);
       } catch (err) {
         if (err.response?.status !== 404) {
           toast.error(
@@ -125,7 +146,7 @@ const Account = () => {
   }, [details]);
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-background text-foreground">
       <div className="w-full max-w-4xl p-4 flex flex-col gap-3">
         {alert && (
           <Alert className="mb-1 shadow-sm bg-red-50 border-red-300">
@@ -180,6 +201,9 @@ const Account = () => {
             </CardContent>
           </Card>
           <Card className="w-full lg:w-5/8 px-2">
+            <CardHeader>
+              <CardTitle>Your Patient Details</CardTitle>
+            </CardHeader>
             <CardContent className="flex flex-col gap-2">
               <div className="flex gap-2">
                 <p className="font-semibold w-3/8">Full Name</p>
@@ -210,11 +234,11 @@ const Account = () => {
                   {details.description && (
                     <Popover>
                       <PopoverTrigger asChild>
-                        <button className="text-zinc-700 hover:text-white transition-colors hover:bg-zinc-700 border-2 border-zinc-700 rounded-sm shadow-sm hover:shadow-md">
+                        <button className="transition-colors rounded-sm border border-border shadow-sm hover:bg-muted hover:text-foreground hover:shadow-md p-1">
                           <Ellipsis className="w-4 h-4" />
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="max-w-sm max-h-48 overflow-y-auto text-sm text-zinc-700">
+                      <PopoverContent className="max-w-sm max-h-48 overflow-y-auto text-sm bg-popover text-popover-foreground border border-border shadow-lg">
                         {details.description}
                       </PopoverContent>
                     </Popover>
@@ -373,7 +397,50 @@ const Account = () => {
         </div>
 
         <Card>
-          <p className="text-center text-3xl">Your Appointments</p>
+          <CardHeader>
+            <CardTitle>Your Appointment History</CardTitle>
+            <CardDescription>
+              View all your recent appointments here
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableCaption>A list of appointments</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>TimeSlot</TableHead>
+                  <TableHead>Doctor</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Reason</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {appointments.map((appointment) => (
+                  <TableRow key={appointment._id}>
+                    <TableCell>
+                      {format(appointment.date, "do MMMM yyyy")}
+                    </TableCell>
+                    <TableCell>{appointment.timeSlot}</TableCell>
+                    <TableCell>{appointment.doctorID.name}</TableCell>
+                    <TableCell>{appointment.status}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">
+                      <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <button className="text-left w-full truncate">
+                            {appointment.reason}
+                          </button>
+                        </HoverCardTrigger>
+                        <HoverCardContent className="max-w-sm text-sm">
+                          {appointment.reason}
+                        </HoverCardContent>
+                      </HoverCard>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
         </Card>
       </div>
     </div>

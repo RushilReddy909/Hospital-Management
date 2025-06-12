@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 
 const Home = () => {
   const [details, setDetails] = useState(null);
-  const [doctor, setDoctor] = useState(null);
   const [nextAppointment, setNextAppointment] = useState(null);
   const [showNoPatientAlert, setShowNoPatientAlert] = useState(false);
 
@@ -27,15 +26,7 @@ const Home = () => {
         setDetails(data);
 
         const appointments = await api.get("/appointment");
-        if (appointments.data.data.length > 0) {
-          const doct = await api.get(
-            `/doctor/${appointments.data.data[0].doctorID}`
-          );
-          if (Object.keys(doct.data.data).length > 0) {
-            setDoctor(doct.data.data);
-          }
-          setNextAppointment(appointments.data.data[0]);
-        }
+        setNextAppointment(appointments.data.data[0]);
       } catch (err) {
         setShowNoPatientAlert(true);
       }
@@ -123,9 +114,7 @@ const Home = () => {
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <CalendarDays className="h-6 w-6 text-blue-600" />
-                  <p className="text-xl font-semibold">
-                    Your Next Appointment
-                  </p>
+                  <p className="text-xl font-semibold">Your Next Appointment</p>
                 </div>
 
                 <div className="space-y-3 text-md">
@@ -133,7 +122,7 @@ const Home = () => {
                     <BriefcaseMedical className="h-4 w-4 text-green-600" />
                     <p>
                       <span className="font-medium">Doctor:</span>{" "}
-                      {doctor.name || "Not Found"}
+                      {nextAppointment.doctorID.name || "Not Found"}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

@@ -1,5 +1,6 @@
 import appointmentModel from "../models/appointmentModel.js";
 import { validationResult } from "express-validator";
+import patientModel from "../models/patientModel.js";
 
 const createAppointment = async (req, res) => {
   const errors = validationResult(req);
@@ -11,9 +12,13 @@ const createAppointment = async (req, res) => {
     });
   }
 
-  const patientID = req.user.id;
+  const userID = req.user.id;
 
   try {
+    const pat = await patientModel.findOne({ patientID: userID });
+    const patientID = pat._id;
+    console.log(patientID);
+
     const exist = await appointmentModel.findOne({
       patientID,
       doctorID: req.body.doctorID,
@@ -72,10 +77,15 @@ const updateAppointment = async (req, res) => {
 };
 
 const getAppointment = async (req, res) => {
-  const patientID = req.user.id;
+  const userID = req.user.id;
 
   try {
-    const appointment = await appointmentModel.find({ patientID });
+    const patient = await patientModel.findOne({ patientID: userID });
+    const patientID = patient._id;
+
+    const appointment = await appointmentModel
+      .find({ patientID })
+      .populate("doctorID");
 
     return res.status(200).json({
       success: true,

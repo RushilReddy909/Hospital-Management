@@ -6,7 +6,6 @@ import {
   Phone,
   User,
 } from "lucide-react";
-import { FaUser } from "react-icons/fa";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -25,7 +24,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 
 export function NavUser({ user }) {
   const { isMobile } = useSidebar();
@@ -86,13 +84,17 @@ export function NavUser({ user }) {
                   Account
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Phone />
-                Support
+              <DropdownMenuItem asChild>
+                <Link to="/support">
+                  <Phone />
+                  Support
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
+              <DropdownMenuItem asChild>
+                <Link to="#">
+                  <Bell />
+                  Notifications
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

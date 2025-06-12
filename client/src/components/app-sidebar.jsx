@@ -1,5 +1,5 @@
 import * as React from "react";
-import { BriefcaseMedical, Home, UsersRound } from "lucide-react";
+import { BriefcaseMedical, Home, ShieldPlus, UsersRound } from "lucide-react";
 import { DatePicker } from "@/components/date-picker";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -31,7 +31,7 @@ const items = [
   {
     title: "Home Page",
     url: "/",
-    icon: Home
+    icon: Home,
   },
   {
     title: "Book an Appointment",
@@ -42,6 +42,11 @@ const items = [
     title: "Our Doctors",
     url: "/doctors",
     icon: UsersRound,
+  },
+  {
+    title: "Services",
+    url: "/services",
+    icon: ShieldPlus,
   },
 ];
 
