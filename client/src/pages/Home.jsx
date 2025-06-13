@@ -78,10 +78,10 @@ const Home = () => {
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl">
             <Card className="hover:shadow-lg transition-shadow bg-card text-card-foreground">
-              <Link to="/doctors">
+              <Link to="/services">
                 <CardContent className="p-5 flex flex-col items-center text-center">
-                  <CalendarDays className="h-10 w-10 mb-2 text-blue-700" />
-                  <p className="font-semibold">View Doctors</p>
+                  <Stethoscope className="h-10 w-10 mb-2 text-blue-700" />
+                  <p className="font-semibold">Avail Services</p>
                   <p className="text-sm text-gray-500">View and manage</p>
                 </CardContent>
               </Link>
@@ -98,9 +98,9 @@ const Home = () => {
               </Link>
             </Card>
             <Card className="hover:shadow-lg transition-shadow bg-card text-card-foreground">
-              <Link to="/appointments">
+              <Link to="/doctors">
                 <CardContent className="p-5 flex flex-col items-center text-center">
-                  <Stethoscope className="h-10 w-10 mb-2 text-purple-700" />
+                  <CalendarDays className="h-10 w-10 mb-2 text-purple-700" />
                   <p className="font-semibold">Book Appointment</p>
                   <p className="text-sm text-gray-500">Schedule a visit</p>
                 </CardContent>

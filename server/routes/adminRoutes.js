@@ -22,6 +22,13 @@ import {
   updateDoctor,
   deleteDoctor,
 } from "../controllers/doctorController.js";
+import {
+  getAllServices,
+  getServiceById,
+  createService,
+  updateService,
+  deleteService,
+} from "../controllers/servicesController.js";
 
 const router = express.Router();
 
@@ -149,5 +156,16 @@ router.put(
 );
 
 router.delete("/doctors/:id", verifyToken, adminOnly, deleteDoctor);
+
+//Services Routes
+router.get("/services", verifyToken, adminOnly, getAllServices);
+
+router.get("/services/:id", verifyToken, adminOnly, getServiceById);
+
+router.post("/services", verifyToken, adminOnly, createService);
+
+router.put("/services", verifyToken, adminOnly, updateService);
+
+router.delete("/services", verifyToken, adminOnly, deleteService);
 
 export default router;

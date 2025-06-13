@@ -6,8 +6,10 @@ import patientRoutes from "./routes/patientRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import doctorRoutes from "./routes/doctorRoutes.js";
-import cors from "cors";
 import appointmentRoutes from "./routes/appointmentRoutes.js";
+import servicesRoutes from "./routes/servicesRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
+import cors from "cors";
 
 dotenv.config();
 
@@ -24,6 +26,8 @@ app.use("/api/patient", patientRoutes);
 app.use("/api/doctor", doctorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/appointment", appointmentRoutes);
+app.use("/api/services", servicesRoutes);
+app.use("/api/payment", paymentRoutes);
 
 app.listen(PORT, () => {
   connectDB();

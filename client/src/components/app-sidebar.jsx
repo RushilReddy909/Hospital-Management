@@ -24,7 +24,7 @@ import { Link } from "react-router-dom";
 const hospital = {
   name: "NeoCure Hospital",
   desc: "World Class Hospital",
-  avatar: "/avatars/shadcn.jpg",
+  avatar: "/favicon.png",
 };
 
 const items = [
@@ -32,11 +32,6 @@ const items = [
     title: "Home Page",
     url: "/",
     icon: Home,
-  },
-  {
-    title: "Book an Appointment",
-    url: "/appointments",
-    icon: BriefcaseMedical,
   },
   {
     title: "Our Doctors",

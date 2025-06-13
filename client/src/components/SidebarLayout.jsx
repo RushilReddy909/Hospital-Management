@@ -14,24 +14,11 @@ import {
 import { Outlet } from "react-router";
 import { Slide, ToastContainer } from "react-toastify";
 import { ModeToggle } from "./mode-toggle";
-
-const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+import { format } from "date-fns";
 
 export default function Page() {
   const date = new Date();
+  const formatted = format(date, "MMMM yyyy");
 
   return (
     <SidebarProvider>
@@ -41,13 +28,11 @@ export default function Page() {
           {/* Left Section: Sidebar + Breadcrumb */}
           <div className="flex items-center gap-3">
             <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbPage>
-                    {months[date.getMonth()]} {date.getFullYear()}
-                  </BreadcrumbPage>
+                  <BreadcrumbPage>{formatted}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>

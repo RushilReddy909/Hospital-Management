@@ -64,7 +64,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required").max(40),
@@ -149,8 +153,8 @@ const Account = () => {
     <div className="flex justify-center items-center min-h-screen bg-background text-foreground">
       <div className="w-full max-w-4xl p-4 flex flex-col gap-3">
         {alert && (
-          <Alert className="mb-1 shadow-sm bg-red-50 border-red-300">
-            <Siren color="red" className="h-6 w-6 mr-2" />
+          <Alert className="mb-1 shadow-sm border border-destructive/30 bg-destructive/10 dark:bg-destructive/20 dark:border-destructive/50 text-destructive">
+            <Siren className="h-6 w-6 mr-2 text-destructive" />
             <AlertTitle>Patient Record not Found</AlertTitle>
             <AlertDescription>
               Create an account to avail services

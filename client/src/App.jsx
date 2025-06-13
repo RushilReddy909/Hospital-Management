@@ -8,7 +8,6 @@ import SidebarLayout from "./components/SidebarLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminOnly from "./components/AdminOnly";
 import Admin from "./pages/Admin";
-import Appointments from "./pages/Appointments";
 import Doctors from "./pages/Doctors";
 import Support from "./pages/Support";
 import Services from "./pages/Services";
@@ -26,7 +25,6 @@ const App = () => {
         >
           <Route path="/" element={<Home />} />
           <Route path="/account" element={<Profile />} />
-          <Route path="/appointments" element={<Appointments />} />
           <Route path="/doctors" element={<Doctors />} />
           <Route path="/support" element={<Support />} />
           <Route path="/services" element={<Services />} />
