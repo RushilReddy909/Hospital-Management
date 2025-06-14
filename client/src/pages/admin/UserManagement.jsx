@@ -333,7 +333,7 @@ const UserManagement = () => {
       {newRole === "doctor" && (
         <DoctorDialog
           open={modalOpen}
-          setOpen={setModalOpen}
+          onOpenChange={setModalOpen}
           oldUser={selectedUser}
           roleData={roleData}
           viewOnly={viewOnly}
@@ -343,7 +343,7 @@ const UserManagement = () => {
       {newRole === "patient" && (
         <PatientDialog
           open={modalOpen}
-          setOpen={setModalOpen}
+          onOpenChange={setModalOpen}
           oldUser={selectedUser}
           roleData={roleData}
           viewOnly={viewOnly}
@@ -353,7 +353,7 @@ const UserManagement = () => {
       {newRole === "admin" && (
         <AdminDialog
           open={modalOpen}
-          setOpen={setModalOpen}
+          onOpenChange={setModalOpen}
           oldUser={selectedUser}
           callBack={fetchAll}
         />
@@ -361,7 +361,7 @@ const UserManagement = () => {
       {newRole == "user" && (
         <UserDialog
           open={modalOpen}
-          setOpen={setModalOpen}
+          onOpenChange={setModalOpen}
           oldUser={selectedUser}
           roleData={roleData}
           viewOnly={viewOnly}

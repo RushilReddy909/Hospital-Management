@@ -12,7 +12,7 @@ import { Button } from "../ui/button";
 import { toast } from "react-toastify";
 import { admin } from "@/utils/api";
 
-const AdminDialog = ({ open, setOpen, oldUser, callBack }) => {
+const AdminDialog = ({ open, onOpenChange, oldUser, callBack }) => {
   const handleAdmin = async () => {
     try {
       {
@@ -23,14 +23,13 @@ const AdminDialog = ({ open, setOpen, oldUser, callBack }) => {
       toast.success("User is now an admin");
 
       callBack();
-      setOpen(false);
     } catch (err) {
       toast.error(`Error doing operation: ${err.response?.data?.error}`);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader className={"text-red-500"}>
           <DialogTitle>Confirm admin promotion</DialogTitle>

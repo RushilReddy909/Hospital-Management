@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import Doctors from "./pages/Doctors";
 import Support from "./pages/Support";
 import Services from "./pages/Services";
+import Transactions from "./pages/Transactions";
 
 const App = () => {
   return (
@@ -28,6 +29,7 @@ const App = () => {
           <Route path="/doctors" element={<Doctors />} />
           <Route path="/support" element={<Support />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/transactions" element={<Transactions />} />
         </Route>
         <Route element={<AdminOnly />}>
           <Route path="/admin" element={<Admin />} />

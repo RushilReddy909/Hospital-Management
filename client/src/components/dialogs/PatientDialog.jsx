@@ -47,7 +47,7 @@ const patientSchema = z.object({
 
 const PatientDialog = ({
   open,
-  setOpen,
+  onOpenChange,
   oldUser,
   roleData,
   viewOnly,
@@ -102,7 +102,7 @@ const PatientDialog = ({
         await admin.post("/patients", data);
         toast.success("Successfully added");
       }
-      setOpen(false);
+
       callBack();
     } catch (err) {
       toast.error("Error submitting data");
@@ -111,7 +111,7 @@ const PatientDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Patient Details</DialogTitle>
@@ -228,8 +228,9 @@ const PatientDialog = ({
             <Button
               type="button"
               variant="outline"
+              className="font-semibold"
               onClick={() => {
-                if (edit) reset();
+                if (edit) form.reset();
               }}
             >
               {edit ? "Cancel" : "Close"}

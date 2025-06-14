@@ -1,6 +1,7 @@
 import appointmentModel from "../models/appointmentModel.js";
 import { validationResult } from "express-validator";
 import patientModel from "../models/patientModel.js";
+import doctorModel from "../models/doctorModel.js";
 
 const createAppointment = async (req, res) => {
   const errors = validationResult(req);
@@ -17,12 +18,22 @@ const createAppointment = async (req, res) => {
   try {
     const pat = await patientModel.findOne({ patientID: userID });
     const patientID = pat._id;
-    console.log(patientID);
 
     const exist = await appointmentModel.findOne({
       patientID,
       doctorID: req.body.doctorID,
     });
+
+    const away = await doctorModel.findOne({
+      doctorID: req.body.doctorID,
+    });
+
+    if (away.status === "Away") {
+      return res.status(400).json({
+        success: false,
+        message: "Doctor Not Available",
+      });
+    }
 
     if (exist) {
       return res.status(400).json({

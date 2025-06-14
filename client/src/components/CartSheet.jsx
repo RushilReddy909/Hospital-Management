@@ -29,7 +29,7 @@ const CartSheet = ({ open, onOpenChange }) => {
 
   const handleCheckout = async () => {
     try {
-      const amount = getTotal(); // total price from your cart
+      const amount = getTotal();
       const { data } = await api.post("/payment/create-order", { amount });
 
       if (!data.success) throw new Error("Order creation failed");
@@ -42,9 +42,16 @@ const CartSheet = ({ open, onOpenChange }) => {
         description: "Service Payment",
         image: favicon,
         order_id: data.order.id,
-        handler: function (response) {
-          console.log("Payment success:", response);
-          toast.success("Payment successful!");
+        handler: async function (response) {
+          await api.post("/payment/save-transaction", {
+            orderID: data.order.id,
+            paymentID: response.razorpay_payment_id,
+            amount: data.order.amount,
+            currency: data.order.currency,
+            receipt: data.order.receipt,
+            status: "success",
+          });
+          useCartStore.getState().clearCart();
         },
         prefill: {
           name: "Patient Name",
@@ -68,7 +75,7 @@ const CartSheet = ({ open, onOpenChange }) => {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-[350px] sm:w-[400px] flex flex-col"
+        className="w-[350px] sm:w-[400px] flex flex-col max-h-screen"
       >
         <SheetHeader>
           <SheetTitle className="text-xl font-bold text-primary flex items-center gap-2">
@@ -77,7 +84,7 @@ const CartSheet = ({ open, onOpenChange }) => {
           </SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="mt-4 flex-1 px-2">
+        <ScrollArea className="mt-4 flex-1 overflow-y-auto px-2">
           {cart.length === 0 ? (
             <div className="text-center mt-8 text-gray-500 dark:text-gray-400">
               <ShoppingCart className="mx-auto mb-2 w-10 h-10 text-gray-400" />

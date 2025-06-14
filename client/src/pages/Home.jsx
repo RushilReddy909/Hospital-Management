@@ -6,12 +6,14 @@ import {
   BookHeart,
   BriefcaseMedical,
   CalendarDays,
+  Clock,
   Stethoscope,
   UserCog,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 
 const Home = () => {
   const [details, setDetails] = useState(null);
@@ -26,7 +28,10 @@ const Home = () => {
         setDetails(data);
 
         const appointments = await api.get("/appointment");
-        setNextAppointment(appointments.data.data[0]);
+        const pendingAppointments = appointments.data.data.filter(
+          (appointment) => appointment.status === "Pending"
+        );
+        setNextAppointment(pendingAppointments[0]);
       } catch (err) {
         setShowNoPatientAlert(true);
       }
@@ -129,7 +134,14 @@ const Home = () => {
                     <CalendarDays className="h-4 w-4 text-purple-600" />
                     <p>
                       <span className="font-medium">Date:</span>{" "}
-                      {new Date(nextAppointment.date).toLocaleDateString()}
+                      {format(new Date(nextAppointment.date), "do MMMM yyyy")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-pink-600" />
+                    <p>
+                      <span className="font-medium">Timeslot:</span>{" "}
+                      {nextAppointment.timeSlot}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

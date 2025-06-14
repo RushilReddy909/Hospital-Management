@@ -33,7 +33,7 @@ const userSchema = z.object({
 
 const UserDialog = ({
   open,
-  setOpen,
+  onOpenChange,
   roleData,
   callBack,
   viewOnly,
@@ -69,7 +69,7 @@ const UserDialog = ({
     try {
       await admin.put(`/users/${oldUser._id}`, data);
       toast.success("User updated successfully");
-      setOpen(false);
+      
       callBack();
     } catch (err) {
       toast.error(`Error updating user: ${err.message || err}`);
@@ -77,7 +77,7 @@ const UserDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>User Info</DialogTitle>
@@ -131,7 +131,6 @@ const UserDialog = ({
               className="font-semibold"
               onClick={() => {
                 if (edit) form.reset();
-                else setOpen(false);
               }}
             >
               {edit ? "Cancel" : "Close"}

@@ -69,7 +69,7 @@ const doctorSchema = z.object({
 
 const DoctorDialog = ({
   open,
-  setOpen,
+  onOpenChange,
   oldUser,
   roleData,
   viewOnly,
@@ -132,7 +132,6 @@ const DoctorDialog = ({
         toast.success("Successfully added");
       }
 
-      setOpen(false);
       callBack();
     } catch (err) {
       toast.error("Error saving doctor");
@@ -141,7 +140,7 @@ const DoctorDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Doctor Details</DialogTitle>

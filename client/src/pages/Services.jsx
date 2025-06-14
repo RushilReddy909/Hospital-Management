@@ -10,7 +10,7 @@ import {
 import { api } from "@/utils/api";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Filter, ShoppingCart, Clock, Info } from "lucide-react";
+import { Filter, ShoppingCart, Clock, Info, Check } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import CartSheet from "@/components/CartSheet";
 
@@ -37,6 +37,7 @@ const Services = () => {
   const [services, setServices] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const cart = useCartStore((state) => state.cart);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -93,48 +94,59 @@ const Services = () => {
       {/* Service Cards */}
       {filteredServices.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {filteredServices.map((service) => (
-            <Card
-              key={service._id}
-              className="transition-shadow duration-300 hover:shadow-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl"
-            >
-              <CardContent className="pt-6 space-y-4">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {service.name}
-                  </h3>
-                  <Badge
-                    className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                      CATEGORY_COLORS[service.category]
-                    }`}
+          {filteredServices.map((service) => {
+            const isInCart = cart.some((item) => item._id === service._id);
+            return (
+              <Card
+                key={service._id}
+                className="transition-shadow duration-300 hover:shadow-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl"
+              >
+                <CardContent className="pt-6 space-y-4 h-full flex flex-col justify-between">
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                      {service.name}
+                    </h3>
+                    <Badge
+                      className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                        CATEGORY_COLORS[service.category]
+                      }`}
+                    >
+                      {service.category.charAt(0).toUpperCase() +
+                        service.category.slice(1)}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <Info className="w-4 h-4 mt-0.5 text-primary" />
+                    <p className="line-clamp-3">{service.description}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400">
+                    <Clock className="w-4 h-4" />
+                    <span>Duration: {service.duration}</span>
+                  </div>
+
+                  <Button
+                    onClick={() => {
+                      useCartStore.getState().addToCart(service);
+                      toast.success("Added to cart", { autoClose: 1500 });
+                    }}
+                    className="w-full font-semibold"
+                    disabled={isInCart}
                   >
-                    {service.category.charAt(0).toUpperCase() +
-                      service.category.slice(1)}
-                  </Badge>
-                </div>
-
-                <div className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <Info className="w-4 h-4 mt-0.5 text-primary" />
-                  <p className="line-clamp-3">{service.description}</p>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400">
-                  <Clock className="w-4 h-4" />
-                  <span>Duration: {service.duration}</span>
-                </div>
-
-                <Button
-                  onClick={() => {
-                    useCartStore.getState().addToCart(service);
-                    toast.success("Added to cart", { autoClose: 1500 });
-                  }}
-                  className="w-full font-semibold"
-                >
-                  Add to Cart – ₹{service.price}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                    {isInCart ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Added
+                      </>
+                    ) : (
+                      <>Add to Cart – ₹{service.price}</>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <div className="text-gray-500 dark:text-gray-400 italic">

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { BriefcaseMedical, Home, ShieldPlus, UsersRound } from "lucide-react";
+import { BriefcaseMedical, DollarSign, Home, ShieldPlus, UsersRound } from "lucide-react";
 import { DatePicker } from "@/components/date-picker";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -43,6 +43,11 @@ const items = [
     url: "/services",
     icon: ShieldPlus,
   },
+  {
+    title: "Transactions",
+    url: "/transactions",
+    icon: DollarSign
+  }
 ];
 
 export function AppSidebar({ ...props }) {
