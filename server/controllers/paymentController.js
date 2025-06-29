@@ -70,7 +70,7 @@ const getTransactions = async (req, res) => {
         userID,
       })
       .sort({ createdAt: -1 });
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Transactions retrieved",
       data: transactions,
@@ -80,4 +80,22 @@ const getTransactions = async (req, res) => {
   }
 };
 
-export { createOrder, saveTransaction, getTransactions };
+const getAllTransactions = async (req, res) => {
+  try {
+    const transactions = await transactionModel.find({}).populate("userID");
+
+    return res.status(200).json({
+      success: true,
+      message: "All transactions retrieved",
+      data: transactions,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server Error retrieving transactions",
+      error: err.message,
+    });
+  }
+};
+
+export { createOrder, saveTransaction, getTransactions, getAllTransactions };

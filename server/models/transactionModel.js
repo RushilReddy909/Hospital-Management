@@ -26,6 +26,14 @@ const transactionSchema = new mongoose.Schema(
     receipt: {
       type: String,
     },
+    items: [
+      {
+        _id: false, // Optional to avoid Mongoose creating extra _ids
+        name: String,
+        price: Number,
+        duration: String,
+      },
+    ],
     status: {
       type: String,
       enum: ["success", "failed"],

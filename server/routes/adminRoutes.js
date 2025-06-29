@@ -29,6 +29,7 @@ import {
   updateService,
   deleteService,
 } from "../controllers/servicesController.js";
+import { getAllTransactions } from "../controllers/paymentController.js";
 
 const router = express.Router();
 
@@ -167,5 +168,8 @@ router.post("/services", verifyToken, adminOnly, createService);
 router.put("/services", verifyToken, adminOnly, updateService);
 
 router.delete("/services", verifyToken, adminOnly, deleteService);
+
+//Transaction Routes
+router.get("/payment", verifyToken, adminOnly, getAllTransactions);
 
 export default router;

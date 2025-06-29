@@ -28,6 +28,7 @@ const CartSheet = ({ open, onOpenChange }) => {
   const getTotal = useCartStore((state) => state.getTotal);
 
   const handleCheckout = async () => {
+    onOpenChange(false);
     try {
       const amount = getTotal();
       const { data } = await api.post("/payment/create-order", { amount });
@@ -50,6 +51,7 @@ const CartSheet = ({ open, onOpenChange }) => {
             currency: data.order.currency,
             receipt: data.order.receipt,
             status: "success",
+            items: cart,
           });
           useCartStore.getState().clearCart();
         },

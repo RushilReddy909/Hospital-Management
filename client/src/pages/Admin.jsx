@@ -14,7 +14,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
-  Archive,
+  ChartLine,
   ChartNoAxesCombined,
   ClipboardPlus,
   LogOut,
@@ -27,7 +27,7 @@ import Analytics from "./admin/Analytics";
 import UserManagement from "./admin/UserManagement";
 import Appointments from "./admin/Appointments";
 import Log from "./admin/Logs";
-import Records from "./admin/Records";
+import Transactions from "./admin/Transactions";
 import { useNavigate } from "react-router-dom";
 import useAdminStore from "@/store/adminStore";
 import { Slide, ToastContainer } from "react-toastify";
@@ -57,7 +57,7 @@ const Admin = () => {
       icon: ClipboardPlus,
       component: <Appointments />,
     },
-    { title: "Medical Records", icon: Archive, component: <Records /> },
+    { title: "All Transactions", icon: ChartLine, component: <Transactions /> },
     { title: "Server Logs", icon: Logs, component: <Log /> },
   ];
 

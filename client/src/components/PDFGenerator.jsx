@@ -24,16 +24,19 @@ const generateTransactionPDF = async (txn) => {
   try {
     const logo = await getBase64FromImageUrl("/favicon.png");
 
+    // Header
     doc.addImage(logo, "PNG", 14, 10, 20, 20);
     doc.setFontSize(20);
     doc.setTextColor("#0f172a");
     doc.text("NeoCure Hospital", 40, 22);
 
+    // Subheading
     doc.setFontSize(12);
     doc.setTextColor("#333");
     doc.text("Transaction Receipt", 14, 40);
 
-    const rows = [
+    // Transaction Metadata Table
+    const metadataRows = [
       ["Date", new Date(txn.createdAt).toLocaleString()],
       ["Amount", `INR ${txn.amount / 100}`],
       ["Order ID", txn.orderID],
@@ -46,15 +49,45 @@ const generateTransactionPDF = async (txn) => {
       theme: "grid",
       styles: { fontSize: 11, cellPadding: 4 },
       head: [["Field", "Value"]],
-      body: rows,
+      body: metadataRows,
     });
 
+    // Cart Items Table
+    const itemStartY = doc.lastAutoTable.finalY + 10;
+    const itemTable = txn.items.map((item) => [
+      item.name,
+      `INR ${item.price}`,
+      item.duration,
+    ]);
+
+    autoTable(doc, {
+      startY: itemStartY,
+      theme: "striped",
+      styles: {
+        fontSize: 11,
+        cellPadding: 4,
+        textColor: "#1f2937", // dark gray
+        fillColor: [245, 245, 245],
+      },
+      headStyles: {
+        fillColor: [55, 65, 81], // slate-700
+        textColor: "#fff",
+      },
+      alternateRowStyles: {
+        fillColor: [255, 255, 255],
+      },
+      head: [["Service Name", "Price", "Duration"]],
+      body: itemTable,
+    });
+
+    // Footer
+    const footerY = doc.lastAutoTable.finalY + 15;
     doc.setFontSize(10);
     doc.setTextColor("#666");
     doc.text(
       "This is an auto-generated receipt. For queries, contact support@neocure.in",
       14,
-      doc.lastAutoTable.finalY + 15
+      footerY
     );
 
     doc.save(`receipt_${txn._id}.pdf`);
