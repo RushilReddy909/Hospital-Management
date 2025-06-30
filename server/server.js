@@ -33,7 +33,7 @@ app.use("/api/appointment", appointmentRoutes);
 app.use("/api/services", servicesRoutes);
 app.use("/api/payment", paymentRoutes);
 
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "development") {
   const clientBuildPath = path.join(__dirname, "..", "client", "dist");
   app.use(express.static(clientBuildPath));
 
