@@ -2,7 +2,7 @@
 
 A full-stack, role-based hospital management web application built for managing patients, appointments, doctors, services, and payments with seamless admin control and user experience.
 
-🔗 [**Live Demo**](https://your-live-link.com) &nbsp;|&nbsp; 📂 [**Backend Repo**](https://github.com/YourUsername/hospital-backend) &nbsp;|&nbsp; 💻 [**Frontend Repo**](https://github.com/YourUsername/hospital-frontend)
+🔗 [**Live Demo**](https://your-live-link.com) 
 
 ---
 
