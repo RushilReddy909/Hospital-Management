@@ -30,6 +30,12 @@ import {
   deleteService,
 } from "../controllers/servicesController.js";
 import { getAllTransactions } from "../controllers/paymentController.js";
+import {
+  createAppointment,
+  getAllAppointments,
+  getAppointment,
+  updateAppointment,
+} from "../controllers/appointmentController.js";
 
 const router = express.Router();
 
@@ -171,5 +177,14 @@ router.delete("/services", verifyToken, adminOnly, deleteService);
 
 //Transaction Routes
 router.get("/payment", verifyToken, adminOnly, getAllTransactions);
+
+//Appointment Routes
+router.get("/appointments", verifyToken, adminOnly, getAllAppointments);
+
+router.get("/appointments/:id", verifyToken, adminOnly, getAppointment);
+
+router.post("/appointments", verifyToken, adminOnly, createAppointment);
+
+router.put("/appointments/:id", verifyToken, adminOnly, updateAppointment);
 
 export default router;

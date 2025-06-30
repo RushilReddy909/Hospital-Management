@@ -69,6 +69,8 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { useUserStore } from "@/store/userStore";
+import { Link } from "react-router-dom";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required").max(40),
@@ -91,6 +93,8 @@ const Account = () => {
   const [details, setDetails] = useState({});
   const [open, setOpen] = useState(false);
   const [appointments, setAppointments] = useState([]);
+
+  const { role } = useUserStore();
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -392,9 +396,13 @@ const Account = () => {
                     </Form>
                   </DialogContent>
                 </Dialog>
-                <Button className={"font-semibold"} variant={"destructive"}>
-                  Request Deletion
-                </Button>
+                {(role === "doctor" || role === "admin") && (
+                  <Link to={`/${role}`}>
+                    <Button variant={"outline"} className={"font-semibold"}>
+                      {role.charAt(0).toUpperCase() + role.slice(1)} Dashboard
+                    </Button>
+                  </Link>
+                )}
               </div>
             </CardContent>
           </Card>

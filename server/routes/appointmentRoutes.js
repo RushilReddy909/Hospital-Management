@@ -3,6 +3,7 @@ import { verifyToken } from "../middlewares/authMiddleware.js";
 import {
   getAppointment,
   createAppointment,
+  updateAppointment,
 } from "../controllers/appointmentController.js";
 import { body } from "express-validator";
 
@@ -38,5 +39,7 @@ const router = express.Router();
 router.get("/", verifyToken, getAppointment);
 
 router.post("/", verifyToken, validation, createAppointment);
+
+router.put("/:id", verifyToken, validation, updateAppointment);
 
 export default router;

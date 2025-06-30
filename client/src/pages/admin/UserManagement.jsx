@@ -48,6 +48,7 @@ import UserDialog from "@/components/dialogs/UserDialog";
 const UserManagement = () => {
   const data = useAdminStore((state) => state.users);
   const fetchAll = useAdminStore((state) => state.fetchAll);
+  
   const [columnFilters, setColumnFilters] = useState([]);
   const [sorting, setSorting] = useState([]);
   const [rowSelection, setRowSelection] = useState({});

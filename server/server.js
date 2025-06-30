@@ -10,12 +10,16 @@ import appointmentRoutes from "./routes/appointmentRoutes.js";
 import servicesRoutes from "./routes/servicesRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import cors from "cors";
+import { fileURLToPath } from "url";
+import path from "path";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
-
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(cors());
 app.use(express.json());
@@ -28,6 +32,15 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/appointment", appointmentRoutes);
 app.use("/api/services", servicesRoutes);
 app.use("/api/payment", paymentRoutes);
+
+if (process.env.NODE_ENV === "production") {
+  const clientBuildPath = path.join(__dirname, "client", "dist");
+  app.use(express.static(clientBuildPath));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(clientBuildPath, "index.html"));
+  });
+}
 
 app.listen(PORT, () => {
   connectDB();

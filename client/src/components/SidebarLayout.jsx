@@ -25,7 +25,6 @@ export default function Page() {
       <AppSidebar />
       <SidebarInset>
         <header className="sticky top-0 z-50 flex items-center justify-between h-16 border-b bg-background px-4">
-          {/* Left Section: Sidebar + Breadcrumb */}
           <div className="flex items-center gap-3">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" />

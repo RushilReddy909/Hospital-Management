@@ -88,33 +88,59 @@ const updateAppointment = async (req, res) => {
 };
 
 const getAppointment = async (req, res) => {
-  const userID = req.user.id;
+  const { id: userID, role } = req.user;
 
   try {
-    const patient = await patientModel.findOne({ patientID: userID });
-    const patientID = patient._id;
+    let filter = {};
 
-    const appointment = await appointmentModel
-      .find({ patientID })
-      .populate("doctorID");
+    if (role === "doctor") {
+      const doctor = await doctorModel.findOne({ doctorID: userID });
+      if (!doctor)
+        return res.status(404).json({
+          success: false,
+          message: "Doctor not found",
+        });
+      filter.doctorID = doctor._id;
+    } else if (role === "patient") {
+      const patient = await patientModel.findOne({ patientID: userID });
+      if (!patient)
+        return res.status(404).json({
+          success: false,
+          message: "Patient not found",
+        });
+      filter.patientID = patient._id;
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized role",
+      });
+    }
+
+    const appointments = await appointmentModel
+      .find(filter)
+      .populate("doctorID")
+      .populate("patientID");
 
     return res.status(200).json({
       success: true,
-      message: "User appointments retrieved",
-      data: appointment,
+      message: "Appointments retrieved successfully",
+      data: appointments,
     });
   } catch (err) {
     return res.status(500).json({
       success: false,
-      message: "Server error fetching appointment",
-      error: err,
+      message: "Server error fetching appointments",
+      error: err.message,
     });
   }
 };
 
 const getAllAppointments = async (req, res) => {
   try {
-    const appointments = await appointmentModel.find({});
+    const appointments = await appointmentModel
+      .find({})
+      .populate("patientID")
+      .populate("doctorID");
 
     return res.status(200).json({
       success: true,

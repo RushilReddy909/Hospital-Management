@@ -1,41 +1,40 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { api } from "@/utils/api";
 
-const ProtectedRoute = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null); // Initially null (for loading state)
-  const token = localStorage.getItem("token"); // Get the token from localStorage
+// Accept `children` and optional `roles` prop
+const ProtectedRoute = ({ children, roles = [] }) => {
+  const [status, setStatus] = useState({ loading: true, allowed: false });
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
     if (!token) {
-      setIsAuthenticated(false); // No token found, set as unauthenticated
+      setStatus({ loading: false, allowed: false });
       return;
     }
 
-    // Verify token with the backend
-    const verifyToken = async () => {
+    const verify = async () => {
       try {
-        const response = await api.get("/user/verify");
-        // If the response is successful, the token is valid
-        setIsAuthenticated(true);
-      } catch (error) {
-        // If the token verification fails (e.g., invalid or expired token)
-        setIsAuthenticated(false);
+        const res = await api.get("/user"); // expected to return user object
+        const user = res.data.data;
+
+        if (roles.length === 0 || roles.includes(user.role)) {
+          setStatus({ loading: false, allowed: true });
+        } else {
+          setStatus({ loading: false, allowed: false });
+        }
+      } catch (err) {
+        setStatus({ loading: false, allowed: false });
       }
     };
 
-    verifyToken(); // Call the verification function
-  }, [token]);
+    verify();
+  }, [roles]);
 
-  // While loading, show a loading message or spinner
-  if (isAuthenticated === null) return null;
+  if (status.loading) return null;
+  if (!status.allowed) return <Navigate to="/login" replace />;
 
-  // If not authenticated, redirect to the login page
-  if (isAuthenticated === false) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // If authenticated, render the children (protected page content)
   return children;
 };
 

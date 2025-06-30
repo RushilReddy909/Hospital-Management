@@ -94,10 +94,11 @@ const loginUser = async (req, res) => {
       success: true,
       message: "User successfully logged in",
       token,
-      user: {
+      data: {
         id: found._id,
         name: found.name,
         email: found.email,
+        role: found.role,
       },
     });
   } catch (err) {
