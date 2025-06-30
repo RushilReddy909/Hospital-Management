@@ -73,3 +73,8 @@ Setup frontend
 cd client
 npm install
 ```
+
+Run both using
+```bash
+npm run dev
+```
