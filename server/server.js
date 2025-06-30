@@ -34,10 +34,10 @@ app.use("/api/services", servicesRoutes);
 app.use("/api/payment", paymentRoutes);
 
 if (process.env.NODE_ENV === "production") {
-  const clientBuildPath = path.join(__dirname, "client", "dist");
+  const clientBuildPath = path.join(__dirname, "..", "client", "dist");
   app.use(express.static(clientBuildPath));
 
-  app.get("*", (req, res) => {
+  app.get("/{*any}", (req, res) => {
     res.sendFile(path.join(clientBuildPath, "index.html"));
   });
 }
