@@ -9,6 +9,7 @@ import doctorRoutes from "./routes/doctorRoutes.js";
 import appointmentRoutes from "./routes/appointmentRoutes.js";
 import servicesRoutes from "./routes/servicesRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import predictRoutes from "./routes/predictRoutes.js";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import path from "path";
@@ -32,6 +33,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/appointment", appointmentRoutes);
 app.use("/api/services", servicesRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/disease", predictRoutes);
 
 if (process.env.NODE_ENV === "development") {
   const clientBuildPath = path.join(__dirname, "..", "client", "dist");

@@ -21,6 +21,7 @@ import AdminHome from "./pages/admin/AdminHome";
 //Doctor nested pages
 import DoctorHome from "./pages/doctor/DoctorHome";
 import DoctorAppointments from "./pages/doctor/Appointments";
+import Prediction from "./pages/Prediction";
 
 const App = () => {
   return (
@@ -39,6 +40,7 @@ const App = () => {
         <Route path="/support" element={<Support />} />
         <Route path="/services" element={<Services />} />
         <Route path="/transactions" element={<Transactions />} />
+        <Route path="/predictor" element={<Prediction />} />
       </Route>
 
       {/* Admin-only routes */}

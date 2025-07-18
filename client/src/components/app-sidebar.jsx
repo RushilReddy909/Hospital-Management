@@ -7,6 +7,7 @@ import {
   BarChart3,
   CalendarCheck,
   ClipboardPlus,
+  Brain,
 } from "lucide-react";
 import { DatePicker } from "@/components/date-picker";
 import { NavUser } from "@/components/nav-user";
@@ -51,6 +52,7 @@ const sidebarConfig = {
     { title: "Our Doctors", url: "/doctors", icon: UsersRound },
     { title: "Services", url: "/services", icon: ShieldPlus },
     { title: "Transactions", url: "/transactions", icon: DollarSign },
+    { title: "AI Disease Predictor", url: "/predictor", icon: Brain },
   ],
 };
 
