@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Stethoscope, Info } from "lucide-react";
+import { Loader2, Stethoscope, Info, XCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { api } from "@/utils/api";
@@ -23,13 +23,14 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { MultiSelect } from "react-multi-select-component";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
   symptoms: z.array(z.string()).min(1, "Please select at least one symptom."),
@@ -39,14 +40,20 @@ const Prediction = () => {
   const [result, setResult] = useState(null);
   const [symptomsList, setSymptomsList] = useState([]);
   const [loadingSymptoms, setLoadingSymptoms] = useState(true);
+  const [selectedSymptoms, setSelectedSymptoms] = useState([]);
+  const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {
     const fetchSymptoms = async () => {
       try {
         const response = await api.get("/disease/symptoms");
-        setSymptomsList(response.data.data.symptoms.map(symptom => ({ label: symptom, value: symptom })));
+        setSymptomsList(response.data.data.symptoms);
       } catch (error) {
-        toast.error(`❌ Error fetching symptoms: ${error.response?.data?.error || error.message}`);
+        toast.error(
+          `❌ Error fetching symptoms: ${
+            error.response?.data?.error || error.message
+          }`
+        );
       } finally {
         setLoadingSymptoms(false);
       }
@@ -64,11 +71,8 @@ const Prediction = () => {
 
   const onSubmit = async (values) => {
     try {
-      // Extract symptom values from the selected options
-      const selectedSymptomValues = values.symptoms.map(symptom => symptom.value);
-
       const response = await api.post("/disease/predict", {
-        symptoms: selectedSymptomValues,
+        symptoms: values.symptoms,
       });
 
       setResult(response.data.data.prediction || "Disease not found");
@@ -77,6 +81,29 @@ const Prediction = () => {
       setResult(null);
     }
   };
+
+  const handleSelectSymptom = (symptom) => {
+    if (!selectedSymptoms.includes(symptom)) {
+      const newSelectedSymptoms = [...selectedSymptoms, symptom];
+      setSelectedSymptoms(newSelectedSymptoms);
+      form.setValue("symptoms", newSelectedSymptoms);
+      setInputValue(""); // Clear input after selection
+    }
+  };
+
+  const handleRemoveSymptom = (symptomToRemove) => {
+    const newSelectedSymptoms = selectedSymptoms.filter(
+      (symptom) => symptom !== symptomToRemove
+    );
+    setSelectedSymptoms(newSelectedSymptoms);
+    form.setValue("symptoms", newSelectedSymptoms);
+  };
+
+  const filteredSymptoms = symptomsList.filter(
+    (symptom) =>
+      symptom.toLowerCase().includes(inputValue.toLowerCase()) &&
+      !selectedSymptoms.includes(symptom)
+  );
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] p-6 gap-6">
@@ -102,16 +129,52 @@ const Prediction = () => {
                   <FormItem>
                     <FormLabel>Symptoms</FormLabel>
                     <FormControl>
-                      {loadingSymptoms ? (
-                        <div>Loading symptoms...</div>
-                      ) : (
-                        <MultiSelect
-                          options={symptomsList}
-                          value={field.value}
-                          onChange={field.onChange}
-                          labelledBy="Select Symptoms"
-                        />
-                      )}
+                      <div className="space-y-2">
+                        {loadingSymptoms ? (
+                          <div>Loading symptoms...</div>
+                        ) : (
+                          <Command className="border rounded-md">
+                            <CommandInput
+                              placeholder="Search for symptoms..."
+                              value={inputValue}
+                              onValueChange={setInputValue}
+                            />
+                            <CommandList>
+                              <CommandEmpty>No symptoms found.</CommandEmpty>
+                              <CommandGroup heading="Available Symptoms">
+                                {filteredSymptoms.map((symptom) => (
+                                  <CommandItem
+                                    key={symptom}
+                                    onSelect={() =>
+                                      handleSelectSymptom(symptom)
+                                    }
+                                  >
+                                    {symptom}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {selectedSymptoms.map((symptom) => (
+                            <Badge
+                              key={symptom}
+                              variant="secondary"
+                              className="flex items-center gap-1"
+                            >
+                              {symptom}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSymptom(symptom)}
+                                className="ml-1"
+                              >
+                                <XCircle className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
