@@ -129,11 +129,9 @@ const Prediction = () => {
                   <FormItem>
                     <FormLabel>Symptoms</FormLabel>
                     <FormControl>
-                      <div className="space-y-2">
-                        {loadingSymptoms ? (
-                          <div>Loading symptoms...</div>
-                        ) : (
-                          <Command className="border rounded-md">
+                      <div className="space-y-4">
+                        <div className="w-full">
+                          <Command className="w-full border rounded-md">
                             <CommandInput
                               placeholder="Search for symptoms..."
                               value={inputValue}
@@ -155,8 +153,9 @@ const Prediction = () => {
                               </CommandGroup>
                             </CommandList>
                           </Command>
-                        )}
-                        <div className="flex flex-wrap gap-2">
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 pt-2">
                           {selectedSymptoms.map((symptom) => (
                             <Badge
                               key={symptom}
@@ -176,6 +175,7 @@ const Prediction = () => {
                         </div>
                       </div>
                     </FormControl>
+
                     <FormMessage />
                   </FormItem>
                 )}
@@ -228,7 +228,17 @@ const Prediction = () => {
         <CardContent>
           <ul className="grid grid-cols-2 gap-y-2 text-sm text-muted-foreground">
             {/* This list could potentially be fetched from the backend or a static list */}
-            {[ "Diabetes", "Hypertension", "Malaria", "Dengue", "Tuberculosis", "Asthma", "COVID-19", "Typhoid", "Anemia", "Pneumonia",
+            {[
+              "Diabetes",
+              "Hypertension",
+              "Malaria",
+              "Dengue",
+              "Tuberculosis",
+              "Asthma",
+              "COVID-19",
+              "Typhoid",
+              "Anemia",
+              "Pneumonia",
             ].map((disease, index) => (
               <li key={index} className="pl-4 list-disc">
                 {disease}
