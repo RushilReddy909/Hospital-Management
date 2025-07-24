@@ -106,7 +106,7 @@ def get_symptoms():
         return jsonify({"success": False, "error": "Symptoms list is not available."}), 500
     
     # Replace underscores with spaces for better readability in the frontend
-    readable_symptoms = [symptom.replace('_', ' ') for symptom in symptoms_list]
+    readable_symptoms = [symptom.replace('_', ' ').title() for symptom in symptoms_list]
 
     return jsonify({
         "success": True,

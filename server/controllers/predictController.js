@@ -49,11 +49,13 @@ const predictDisease = async (req, res) => {
 const getSymptoms = async (req, res) => {
   try {
     const aiResponse = await axios.get(`${AI_MODEL_SERVICE_URL}/symptoms`);
+    console.log(AI_MODEL_SERVICE_URL);
 
     if (!aiResponse.data.success) {
       return res.status(500).json({
         success: false,
-        error: aiResponse.data.error || "Failed to fetch symptoms from AI model.",
+        error:
+          aiResponse.data.error || "Failed to fetch symptoms from AI model.",
       });
     }
 
