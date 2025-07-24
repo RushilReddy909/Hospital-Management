@@ -97,6 +97,22 @@ def predict():
         print(f"Error during prediction: {e}")
         return jsonify({"success": False, "error": f"An internal error occurred during prediction: {str(e)}"}), 500
 
+@app.route('/symptoms', methods=['GET'])
+def get_symptoms():
+    """
+    Returns the list of symptoms the AI model is trained on.
+    """
+    if not symptoms_list:
+        return jsonify({"success": False, "error": "Symptoms list is not available."}), 500
+    
+    # Replace underscores with spaces for better readability in the frontend
+    readable_symptoms = [symptom.replace('_', ' ') for symptom in symptoms_list]
+
+    return jsonify({
+        "success": True,
+        "symptoms": readable_symptoms
+    })
+
 if __name__ == '__main__':
     # Ensure the port here matches the AI_MODEL_SERVICE_URL in your Node.js backend's .env
     app.run(debug=True, port=5001)

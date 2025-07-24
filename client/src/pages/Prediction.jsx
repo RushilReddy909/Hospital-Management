@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,11 +10,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Stethoscope, Info } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { api } from "@/utils/api";
@@ -24,38 +22,53 @@ import {
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MultiSelect } from "react-multi-select-component";
 
 const formSchema = z.object({
-  symptoms: z.string().min(1, "Please enter at least one symptom."),
+  symptoms: z.array(z.string()).min(1, "Please select at least one symptom."),
 });
-
-const commonDiseases = [
-  "Diabetes",
-  "Hypertension",
-  "Malaria",
-  "Dengue",
-  "Tuberculosis",
-  "Asthma",
-  "COVID-19",
-  "Typhoid",
-  "Anemia",
-  "Pneumonia",
-];
 
 const Prediction = () => {
   const [result, setResult] = useState(null);
+  const [symptomsList, setSymptomsList] = useState([]);
+  const [loadingSymptoms, setLoadingSymptoms] = useState(true);
+
+  useEffect(() => {
+    const fetchSymptoms = async () => {
+      try {
+        const response = await api.get("/disease/symptoms");
+        setSymptomsList(response.data.data.symptoms.map(symptom => ({ label: symptom, value: symptom })));
+      } catch (error) {
+        toast.error(`❌ Error fetching symptoms: ${error.response?.data?.error || error.message}`);
+      } finally {
+        setLoadingSymptoms(false);
+      }
+    };
+
+    fetchSymptoms();
+  }, []);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      symptoms: "",
+      symptoms: [],
     },
   });
 
   const onSubmit = async (values) => {
     try {
+      // Extract symptom values from the selected options
+      const selectedSymptomValues = values.symptoms.map(symptom => symptom.value);
+
       const response = await api.post("/disease/predict", {
-        symptoms: values.symptoms.split(",").map((s) => s.trim().toLowerCase()),
+        symptoms: selectedSymptomValues,
       });
 
       setResult(response.data.data.prediction || "Disease not found");
@@ -76,7 +89,7 @@ const Prediction = () => {
             </CardTitle>
           </div>
           <p className="text-sm text-muted-foreground pt-1">
-            Enter symptoms (comma separated) to predict possible diseases.
+            Select your symptoms from the list below.
           </p>
         </CardHeader>
         <CardContent>
@@ -89,11 +102,16 @@ const Prediction = () => {
                   <FormItem>
                     <FormLabel>Symptoms</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="e.g., fever, cough, headache"
-                        className="resize-none"
-                        {...field}
-                      />
+                      {loadingSymptoms ? (
+                        <div>Loading symptoms...</div>
+                      ) : (
+                        <MultiSelect
+                          options={symptomsList}
+                          value={field.value}
+                          onChange={field.onChange}
+                          labelledBy="Select Symptoms"
+                        />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -102,7 +120,7 @@ const Prediction = () => {
               <Button
                 type="submit"
                 className="w-full font-semibold"
-                disabled={form.formState.isSubmitting}
+                disabled={form.formState.isSubmitting || loadingSymptoms}
               >
                 {form.formState.isSubmitting ? (
                   <>
@@ -126,6 +144,7 @@ const Prediction = () => {
         </CardContent>
       </Card>
 
+      {/* Common Diseases Card - Kept as is for now */}
       <Card className="w-full max-w-xl shadow-md border dark:border-zinc-700">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg font-semibold">
@@ -145,7 +164,9 @@ const Prediction = () => {
         </CardHeader>
         <CardContent>
           <ul className="grid grid-cols-2 gap-y-2 text-sm text-muted-foreground">
-            {commonDiseases.map((disease, index) => (
+            {/* This list could potentially be fetched from the backend or a static list */}
+            {[ "Diabetes", "Hypertension", "Malaria", "Dengue", "Tuberculosis", "Asthma", "COVID-19", "Typhoid", "Anemia", "Pneumonia",
+            ].map((disease, index) => (
               <li key={index} className="pl-4 list-disc">
                 {disease}
               </li>

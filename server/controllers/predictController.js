@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const AI_MODEL_SERVICE_URL =
-  process.env.AI_MODEL_SERVICE_URL || "http://localhost:5001/predict";
+  process.env.AI_MODEL_SERVICE_URL || "http://localhost:5001";
 
 const predictDisease = async (req, res) => {
   try {
@@ -14,7 +14,7 @@ const predictDisease = async (req, res) => {
       });
     }
 
-    const aiResponse = await axios.post(AI_MODEL_SERVICE_URL, {
+    const aiResponse = await axios.post(`${AI_MODEL_SERVICE_URL}/predict`, {
       symptoms: symptoms,
     });
 
@@ -46,4 +46,38 @@ const predictDisease = async (req, res) => {
   }
 };
 
-export { predictDisease };
+const getSymptoms = async (req, res) => {
+  try {
+    const aiResponse = await axios.get(`${AI_MODEL_SERVICE_URL}/symptoms`);
+
+    if (!aiResponse.data.success) {
+      return res.status(500).json({
+        success: false,
+        error: aiResponse.data.error || "Failed to fetch symptoms from AI model.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Symptoms fetched successfully.",
+      data: {
+        symptoms: aiResponse.data.symptoms,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching symptoms:", error);
+
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to fetch symptoms.";
+
+    res.status(500).json({
+      success: false,
+      error: errorMessage,
+    });
+  }
+};
+
+export { predictDisease, getSymptoms };
