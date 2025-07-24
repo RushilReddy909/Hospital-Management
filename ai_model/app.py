@@ -113,6 +113,10 @@ def get_symptoms():
         "symptoms": readable_symptoms
     })
 
+@app.route('/', methods=["GET"])
+def index():
+    return "API is running"
+
 if __name__ == '__main__':
     # Ensure the port here matches the AI_MODEL_SERVICE_URL in your Node.js backend's .env
     app.run(debug=True, port=5001)

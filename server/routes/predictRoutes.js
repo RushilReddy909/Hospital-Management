@@ -5,6 +5,6 @@ import { predictDisease, getSymptoms } from "../controllers/predictController.js
 const router = express.Router();
 
 router.post("/predict", verifyToken, predictDisease);
-router.get("/symptoms", verifyToken, getSymptoms);
+router.get("/symptoms", getSymptoms);
 
 export default router;
