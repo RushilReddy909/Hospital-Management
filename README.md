@@ -2,7 +2,7 @@
 
 A full-stack, role-based hospital management web application built for managing patients, appointments, doctors, services, and payments with seamless admin control and user experience.
 
-🔗 [**Live Demo**](https://your-live-link.com) 
+🔗 [**Live Demo**](https://hospital-management-bmmd.onrender.com) 
 
 ---
 
@@ -62,6 +62,7 @@ npm install
 Make an env in root folder like this
 ```env
 PORT=5000
+NODE_ENV=production
 MONGODB_URI=your_mongodb_url
 JWT_SECRET=your_secret_key
 RAZORPAY_KEY_ID=your_key
@@ -78,3 +79,4 @@ Run both using
 ```bash
 npm run dev
 ```
+
