@@ -62,8 +62,8 @@ npm install
 Make an env in root folder like this
 ```env
 PORT=5000
-NODE_ENV=production
-MONGODB_URI=your_mongodb_url
+NODE_ENV=production/development
+MONGO_URL=your_mongodb_url
 JWT_SECRET=your_secret_key
 RAZORPAY_KEY_ID=your_key
 RAZORPAY_KEY_SECRET=your_secret
@@ -79,4 +79,5 @@ Run both using
 ```bash
 npm run dev
 ```
+
 
