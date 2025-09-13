@@ -13,11 +13,10 @@
     "build:client": "cd client && npm --force install && npm run build",
     "build:server": "npm install",
     "build:ai": "cd ai_model && pip install -r requirements.txt && python gen_model.py",
-    "build": "npm run build:client && npm run build:server && npm run build:ai",
+    "build": "npm run build:client && npm run build:server",
 
-    "start:ai": "cd ai_model && pip install -r requirements.txt && gunicorn -w 4 -b 0.0.0.0:5001 app:app",
-    "start:server": "cross-env NODE_ENV=production node server/server.js",
-    "start": "concurrently \"npm run start:ai\" \"npm run start:server\""
+    "start:ai": "cd ai_model && gunicorn -w 4 -b 0.0.0.0:5001 app:app",
+    "start": "cross-env NODE_ENV=production node server/server.js"
   },
   "author": "Rushil Reddy",
   "license": "ISC",
