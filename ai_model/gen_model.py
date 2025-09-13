@@ -1,92 +1,94 @@
-# ai_service/generate_model.py
-
-import joblib
 import pandas as pd
-from sklearn.model_selection import train_test_split
+import numpy as np
+import joblib
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.preprocessing import MultiLabelBinarizer, LabelEncoder
-import os
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import accuracy_score
+import random
 
-# --- Configuration ---
-DATASET_PATH = 'dataset.csv'          # Ensure your dataset is in the same directory
-MODEL_OUTPUT_PATH = 'model.pkl'
-DISEASE_COLUMN_NAME = 'Disease'       # Column that holds disease labels
+TRAIN_PATH = "Training.csv"
+TEST_PATH = "Testing.csv"
+MODEL_PATH = "model.pkl"
 
-def generate_model_from_csv():
-    """
-    Loads the dataset, preprocesses it (one-hot encodes symptoms),
-    trains a model, and saves the model and encoders.
-    """
-    if not os.path.exists(DATASET_PATH):
-        print(f"Error: Dataset not found at {DATASET_PATH}")
-        return
+# --- Noise/Overlap Config ---
+OVERLAP_SYMPTOMS_PER_DISEASE = 2  # Number of symptoms shared across diseases
+NOISE_FLIP_PROB = 0.05            # 5% chance to flip each symptom (0→1 or 1→0)
 
-    print(f"Loading dataset from {DATASET_PATH}...")
-    df = pd.read_csv(DATASET_PATH)
+def add_symptom_overlap(df, overlap_count=2):
+    """Randomly share some symptoms across multiple diseases to simulate overlap."""
+    symptom_cols = df.columns[:-1]
+    disease_vals = df.iloc[:, -1].unique()
 
-    if DISEASE_COLUMN_NAME not in df.columns:
-        print(f"Error: '{DISEASE_COLUMN_NAME}' column not found in the dataset.")
-        return
+    for disease in disease_vals:
+        # Choose random symptoms to overlap with other diseases
+        overlap_symptoms = random.sample(list(symptom_cols), overlap_count)
+        # Randomly pick other diseases to inject this symptom
+        other_diseases = [d for d in disease_vals if d != disease]
+        for od in other_diseases:
+            idx = df[df.iloc[:, -1] == od].index
+            df.loc[idx, overlap_symptoms] = df.loc[df[df.iloc[:, -1] == disease].index, overlap_symptoms].sample(len(idx), replace=True).values
+    return df
 
-    # Identify symptom columns
-    symptom_columns = [col for col in df.columns if col != DISEASE_COLUMN_NAME]
+def add_random_noise(df, noise_prob=0.05):
+    """Randomly flip some symptom values to simulate imperfect reporting."""
+    symptom_cols = df.columns[:-1]
+    for col in symptom_cols:
+        mask = np.random.rand(len(df)) < noise_prob
+        df.loc[mask, col] = 1 - df.loc[mask, col]  # Flip 0 ↔ 1
+    return df
 
-    # Step 1: Extract all unique symptoms
-    all_symptoms_raw = df[symptom_columns].fillna('').values.tolist()
+def train_and_save_model():
+    # Load datasets
+    train_df = pd.read_csv(TRAIN_PATH)
+    test_df = pd.read_csv(TEST_PATH)
 
-    unique_symptoms = set()
-    for row_symptoms in all_symptoms_raw:
-        for symptom_cell in row_symptoms:
-            cleaned_symptom = symptom_cell.strip().lower().replace(' ', '_')
-            if cleaned_symptom:
-                unique_symptoms.add(cleaned_symptom)
+    # Inject overlap and noise
+    train_df = add_symptom_overlap(train_df, OVERLAP_SYMPTOMS_PER_DISEASE)
+    train_df = add_random_noise(train_df, NOISE_FLIP_PROB)
+    test_df = add_random_noise(test_df, NOISE_FLIP_PROB)  # Optional, simulate real-world variance
 
-    symptoms_list = sorted(list(unique_symptoms))
+    X_train, y_train = train_df.iloc[:, :-1], train_df.iloc[:, -1]
+    X_test, y_test = test_df.iloc[:, :-1], test_df.iloc[:, -1]
 
-    if not symptoms_list:
-        print("Error: No valid symptoms found in the dataset.")
-        return
+    symptoms_list = list(X_train.columns)
+    unique_diseases = sorted(y_train.unique())
+    diseases_map = {i: d for i, d in enumerate(unique_diseases)}
 
-    # Step 2: Prepare symptom list per patient row
-    processed_symptoms_per_row = []
-    for _, row in df.iterrows():
-        current_row_symptoms = []
-        for col in symptom_columns:
-            symptom_cell_value = str(row[col]).strip().lower().replace(' ', '_')
-            if symptom_cell_value:
-                current_row_symptoms.append(symptom_cell_value)
-        processed_symptoms_per_row.append(current_row_symptoms)
+    models = {
+        "DecisionTree": DecisionTreeClassifier(random_state=42),
+        "RandomForest": RandomForestClassifier(random_state=42),
+        "NaiveBayes": GaussianNB(),
+    }
 
-    # Step 3: One-hot encode symptoms
-    mlb = MultiLabelBinarizer(classes=symptoms_list)
-    X_encoded = mlb.fit_transform(processed_symptoms_per_row)
-    X = pd.DataFrame(X_encoded, columns=mlb.classes_)
+    best_model = None
+    best_acc = 0.0
 
-    # Step 4: Encode disease labels
-    label_encoder = LabelEncoder()
-    y_encoded = label_encoder.fit_transform(df[DISEASE_COLUMN_NAME])
-    diseases_map = {i: disease for i, disease in enumerate(label_encoder.classes_)}
+    for name, model in models.items():
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
 
-    # Step 5: Train the model
-    X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
-    model = DecisionTreeClassifier(random_state=42)
-    model.fit(X_train, y_train)
+        acc = accuracy_score(y_test, y_pred)
+        cv_acc = cross_val_score(model, X_train, y_train, cv=5).mean()
 
-    accuracy = model.score(X_test, y_test)
-    print(f"✅ Model trained successfully. Test set accuracy: {accuracy:.2f}")
+        print(f"\n🔍 {name}")
+        print(f"   Test Accuracy: {acc:.2f}")
+        print(f"   Cross-val Mean Accuracy: {cv_acc:.2f}")
 
-    # Step 6: Save everything
+        if cv_acc > best_acc:
+            best_acc = cv_acc
+            best_model = model
+
+    # Save best model
     joblib.dump({
-        'model': model,
-        'symptoms_list': symptoms_list,
-        'diseases_map': diseases_map,
-        'label_encoder': label_encoder,
-        'mlb': mlb
-    }, MODEL_OUTPUT_PATH)
+        "model": best_model,
+        "symptoms_list": symptoms_list,
+        "diseases_map": diseases_map
+    }, MODEL_PATH)
 
-    print(f"\n📦 Model and encoders saved to: {MODEL_OUTPUT_PATH}")
-    print(f"🩺 Recognized symptoms (example): {symptoms_list[:10]}... ({len(symptoms_list)} total)")
-    print(f"🧾 Disease map: {diseases_map}")
+    print(f"\n🏆 Best Model: {type(best_model).__name__} with CV accuracy {best_acc:.2f}")
+    print(f"📦 Saved to {MODEL_PATH}")
 
 if __name__ == "__main__":
-    generate_model_from_csv()
+    train_and_save_model()

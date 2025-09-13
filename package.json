@@ -4,12 +4,20 @@
   "version": "1.0.0",
   "description": "Hospital Management system",
   "main": "server.js",
-  "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+ "scripts": {
     "dev:server": "nodemon server/server.js",
     "dev:client": "npm run dev --prefix client",
-    "start": "node server/server.js",
-    "build": "npm install --force --prefix client && npm install && npm run build --prefix client"
+    "dev:ai": "cd ai_model && venv\\Scripts\\activate && python app.py",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:ai\"",
+
+    "build:client": "cd client && npm --force install && npm run build",
+    "build:server": "npm install",
+    "build:ai": "cd ai_model && if not exist venv (python -m venv venv && venv\\Scripts\\pip install -r requirements.txt) && venv\\Scripts\\activate && python gen_model.py",
+    "build": "npm run build:client && npm run build:server && npm run build:ai",
+
+    "start:ai": "cd ai_model && venv\\Scripts\\activate && gunicorn -w 4 -b 0.0.0.0:5001 app:app",
+    "start:server": "cross-env NODE_ENV=production node server/server.js",
+    "start": "concurrently \"npm run start:ai\" \"npm run start:server\""
   },
   "author": "Rushil Reddy",
   "license": "ISC",
@@ -27,6 +35,7 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.0",
+    "cross-env": "^10.0.0",
     "nodemon": "^3.1.10"
   }
 }
