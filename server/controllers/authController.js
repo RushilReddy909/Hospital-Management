@@ -109,4 +109,18 @@ const loginUser = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser };
+const logoutUser = async (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      message: "Logged out. Please remove the token on the client.",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: `Server error while processing logout: ${err.message}`,
+    });
+  }
+};
+
+export { registerUser, loginUser, logoutUser };

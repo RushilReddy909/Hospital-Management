@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/utils/api";
 import { format } from "date-fns";
-import { CalendarDays, Clock, FileText, UserCircle2 } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  FileText,
+  UserCircle2,
+  Loader2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Popover,
@@ -100,9 +106,12 @@ const Appointments = () => {
       {/* Appointment Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
-          <p className="col-span-full text-center text-muted-foreground">
-            Loading appointments...
-          </p>
+          <div className="col-span-full flex justify-center items-center min-h-[300px]">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">Loading appointments...</p>
+            </div>
+          </div>
         ) : filteredAppointments.length === 0 ? (
           <p className="col-span-full text-center text-muted-foreground">
             No appointments found.

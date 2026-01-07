@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Loader2 } from "lucide-react";
 
 import {
   Dialog,
@@ -110,7 +111,9 @@ const Appointments = () => {
             {loading ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-6">
-                  Loading...
+                  <div className="flex justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
                 </TableCell>
               </TableRow>
             ) : appointments.length === 0 ? (

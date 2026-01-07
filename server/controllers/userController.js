@@ -10,7 +10,7 @@ const getUserInfo = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Record not found",
-        error: err,
+        error: "User not found",
       });
     }
 
@@ -57,7 +57,7 @@ const getUser = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Record not found",
-        error: err,
+        error: "User not found",
       });
     }
 

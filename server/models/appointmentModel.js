@@ -36,7 +36,10 @@ const appointmentSchema = new mongoose.Schema(
   }
 );
 
-appointmentSchema.index({ patientID: 1, doctorID: 1 }, { unique: true });
+appointmentSchema.index(
+  { doctorID: 1, date: 1, timeSlot: 1 },
+  { unique: true }
+);
 
 const appointmentModel = mongoose.model("appointments", appointmentSchema);
 

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FaGoogle } from "react-icons/fa";
 import { ModeToggle } from "@/components/mode-toggle";
+import { Loader2 } from "lucide-react";
 
 import {
   Form,
@@ -190,8 +191,19 @@ export default function SignupPage() {
                         />
                       </div>
 
-                      <Button type="submit" className="w-full font-bold">
-                        Register
+                      <Button
+                        type="submit"
+                        className="w-full font-bold"
+                        disabled={form.formState.isSubmitting}
+                      >
+                        {form.formState.isSubmitting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Registering...
+                          </>
+                        ) : (
+                          "Register"
+                        )}
                       </Button>
 
                       <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">

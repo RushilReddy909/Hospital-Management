@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 import doctorModel from "../models/doctorModel.js";
 import mongoose from "mongoose";
+import { cache } from "../utils/cache.js";
 
 const addDoctor = async (req, res) => {
   const errors = validationResult(req);
@@ -12,9 +13,22 @@ const addDoctor = async (req, res) => {
     });
   }
 
+  if (
+    !req.body.doctorID ||
+    !mongoose.Types.ObjectId.isValid(req.body.doctorID)
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "doctorID (user _id) is required and must be valid",
+    });
+  }
+
   try {
     const doctor = new doctorModel(req.body);
     await doctor.save();
+
+    // Invalidate doctors list cache
+    await cache.del("doctors:all");
 
     return res.status(201).json({
       success: true,
@@ -31,7 +45,14 @@ const addDoctor = async (req, res) => {
 
 const getAllDoctors = async (req, res) => {
   try {
-    const doctors = await doctorModel.find({});
+    // Try to get from cache first (TTL: 15 minutes)
+    let doctors = await cache.get("doctors:all");
+
+    if (!doctors) {
+      doctors = await doctorModel.find({});
+      // Cache the list
+      await cache.set("doctors:all", doctors, 900); // 15 min TTL
+    }
     return res.status(200).json({
       success: true,
       message: "All doctors retrieved",
@@ -57,7 +78,16 @@ const getDoctor = async (req, res) => {
   }
 
   try {
-    const doctor = await doctorModel.findOne({ doctorID: id });
+    // Try to get from cache first (TTL: 10 minutes)
+    let doctor = await cache.get(`doctor:${id}`);
+
+    if (!doctor) {
+      doctor = await doctorModel.findOne({ doctorID: id });
+      if (doctor) {
+        await cache.set(`doctor:${id}`, doctor, 600); // 10 min TTL
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: "Successfully retrieved",
@@ -99,6 +129,17 @@ const updateDoctor = async (req, res) => {
         runValidators: true,
       }
     );
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    // Invalidate cache
+    await cache.del(`doctor:${id}`);
+    await cache.del("doctors:all");
+
     return res.status(200).json({
       success: true,
       message: "Updated doctor",
@@ -124,6 +165,17 @@ const deleteDoctor = async (req, res) => {
 
   try {
     const deleted = await doctorModel.findOneAndDelete({ doctorID: id });
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    // Invalidate cache
+    await cache.del(`doctor:${id}`);
+    await cache.del("doctors:all");
+
     return res.status(200).json({
       success: true,
       message: "Successfully deleted",

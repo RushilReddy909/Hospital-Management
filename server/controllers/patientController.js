@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import patientModel from "../models/patientModel.js";
+import authModel from "../models/authModel.js";
 import { validationResult } from "express-validator";
+import jwt from "jsonwebtoken";
+import { cache } from "../utils/cache.js";
 
 //Patient Routes
 const upsertSelfPatient = async (req, res) => {
@@ -17,11 +20,46 @@ const upsertSelfPatient = async (req, res) => {
     let patient = await patientModel.findOneAndUpdate({ patientID }, req.body, {
       new: true,
     });
+    let isNewPatient = false;
 
     if (!patient) {
       const newPatient = new patientModel({ ...req.body, patientID });
       patient = await newPatient.save();
+      isNewPatient = true;
+    }
 
+    // Invalidate cached profile/role for this user
+    await cache.del(`user:${patientID}:profile`);
+    await cache.del(`user:${patientID}:role`);
+
+    // Fetch updated user to get the new role
+    const updatedUser = await authModel.findById(patientID);
+    if (updatedUser && updatedUser.role === "patient") {
+      // Generate new token with updated role
+      const newToken = jwt.sign(
+        { id: updatedUser._id, role: updatedUser.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "6h" }
+      );
+
+      if (isNewPatient) {
+        return res.status(201).json({
+          success: true,
+          message: "Registered as new patient successfully",
+          data: patient,
+          token: newToken,
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        data: patient,
+        token: newToken,
+      });
+    }
+
+    if (isNewPatient) {
       return res.status(201).json({
         success: true,
         message: "Registered as new patient successfully",
@@ -69,6 +107,16 @@ const addPatient = async (req, res) => {
       success: false,
       message: "Validation Failed",
       errors: errors.array().map((err) => err.msg),
+    });
+  }
+
+  if (
+    !req.body.patientID ||
+    !mongoose.Types.ObjectId.isValid(req.body.patientID)
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "patientID (user _id) is required and must be valid",
     });
   }
 
@@ -170,6 +218,10 @@ const updatePatient = async (req, res) => {
       }
     );
 
+    // Invalidate cached profile/role for this patient
+    await cache.del(`user:${id}:profile`);
+    await cache.del(`user:${id}:role`);
+
     return res.status(200).json({
       success: true,
       message: "Successfully updated patient",
@@ -197,6 +249,11 @@ const deletePatient = async (req, res) => {
     await patientModel.findOneAndDelete({
       patientID: id,
     });
+
+    // Invalidate cached profile/role for this patient
+    await cache.del(`user:${id}:profile`);
+    await cache.del(`user:${id}:role`);
+
     res.status(200).json({
       success: true,
       message: "Successfully deleted patient",

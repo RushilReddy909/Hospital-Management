@@ -39,7 +39,48 @@ import {
 
 const router = express.Router();
 
-const patientValidation = [
+const patientCreateValidation = [
+  body("patientID")
+    .isMongoId()
+    .withMessage("patientID must be a valid user id")
+    .notEmpty()
+    .withMessage("patientID is required"),
+  body("name")
+    .isString()
+    .withMessage("Name must be a string")
+    .notEmpty()
+    .withMessage("Name is required"),
+
+  body("age")
+    .isInt({ min: 1 })
+    .withMessage("Age must be a positive integer")
+    .notEmpty()
+    .withMessage("Age is required"),
+
+  body("gender")
+    .isIn(["Male", "Female"])
+    .withMessage("Gender must be 'Male' or 'Female'")
+    .notEmpty()
+    .withMessage("Gender is required"),
+
+  body("phone")
+    .isString()
+    .withMessage("Phone must be a string of digits")
+    .matches(/^\d+$/)
+    .withMessage("Phone must contain only numbers")
+    .isLength({ min: 10, max: 10 })
+    .withMessage("Phone number must not exceed 10 digits")
+    .notEmpty()
+    .withMessage("Phone number is required"),
+
+  body("description")
+    .isString()
+    .withMessage("Description must be a string")
+    .notEmpty()
+    .withMessage("Description is required"),
+];
+
+const patientUpdateValidation = [
   body("name")
     .isString()
     .withMessage("Name must be a string")
@@ -80,7 +121,45 @@ const userValidation = [
   body("email").optional().isEmail().withMessage("Invalid email"),
 ];
 
-const doctorValidation = [
+const doctorCreateValidation = [
+  body("doctorID")
+    .isMongoId()
+    .withMessage("doctorID must be a valid user id")
+    .notEmpty()
+    .withMessage("doctorID is required"),
+  body("name")
+    .isString()
+    .withMessage("Name must be a string")
+    .notEmpty()
+    .withMessage("Name is required"),
+  body("specialization")
+    .isString()
+    .withMessage("Specialization must be a string")
+    .notEmpty()
+    .withMessage("Specialization is required"),
+  body("phone")
+    .isString()
+    .withMessage("Phone must be a string of digits")
+    .matches(/^\d+$/)
+    .withMessage("Phone must contain only numbers")
+    .isLength({ min: 10, max: 10 })
+    .withMessage("Phone number must not exceed 10 digits")
+    .notEmpty()
+    .withMessage("Phone number is required"),
+  body("gender")
+    .isString()
+    .isIn(["Male", "Female"])
+    .withMessage("Gender must be either Male or Female"),
+  body("age")
+    .isInt({ min: 1, max: 120 })
+    .withMessage("Age must be a positive integer"),
+  body("status")
+    .isString()
+    .isIn(["Active", "Away"])
+    .withMessage("status should be Active or Away"),
+];
+
+const doctorUpdateValidation = [
   body("name")
     .isString()
     .withMessage("Name must be a string")
@@ -126,13 +205,19 @@ router.get("/patients", verifyToken, adminOnly, getAllPatients);
 
 router.get("/patients/:id", verifyToken, adminOnly, getPatient);
 
-router.post("/patients", verifyToken, adminOnly, patientValidation, addPatient);
+router.post(
+  "/patients",
+  verifyToken,
+  adminOnly,
+  patientCreateValidation,
+  addPatient
+);
 
 router.put(
   "/patients/:id",
   verifyToken,
   adminOnly,
-  patientValidation,
+  patientUpdateValidation,
   updatePatient
 );
 
@@ -152,13 +237,19 @@ router.get("/doctors", verifyToken, adminOnly, getAllDoctors);
 
 router.get("/doctors/:id", verifyToken, adminOnly, getDoctor);
 
-router.post("/doctors", verifyToken, adminOnly, doctorValidation, addDoctor);
+router.post(
+  "/doctors",
+  verifyToken,
+  adminOnly,
+  doctorCreateValidation,
+  addDoctor
+);
 
 router.put(
   "/doctors/:id",
   verifyToken,
   adminOnly,
-  doctorValidation,
+  doctorUpdateValidation,
   updateDoctor
 );
 
