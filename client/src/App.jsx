@@ -1,27 +1,71 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
-import Home from "./pages/Home";
-import Profile from "./pages/Account";
-import SidebarLayout from "./components/SidebarLayout";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Doctors from "./pages/Doctors";
-import Support from "./pages/Support";
-import Services from "./pages/Services";
-import Transactions from "./pages/Transactions";
+
+// Lazy load all page components
+const LoginPage = React.lazy(() => import("./pages/LoginPage"));
+const SignupPage = React.lazy(() => import("./pages/SignupPage"));
+const Home = React.lazy(() => import("./pages/Home"));
+const Profile = React.lazy(() => import("./pages/Account"));
+const SidebarLayout = React.lazy(() => import("./components/SidebarLayout"));
+const ProtectedRoute = React.lazy(() => import("./components/ProtectedRoute"));
+const Doctors = React.lazy(() => import("./pages/Doctors"));
+const Support = React.lazy(() => import("./pages/Support"));
+const Services = React.lazy(() => import("./pages/Services"));
+const Transactions = React.lazy(() => import("./pages/Transactions"));
 
 // Admin nested pages
-import Analytics from "./pages/admin/Analytics";
-import UserManagement from "./pages/admin/UserManagement";
-import Appointments from "./pages/admin/Appointments";
-import AdminTransactions from "./pages/admin/Transactions";
-import AdminHome from "./pages/admin/AdminHome";
+const Analytics = React.lazy(() => import("./pages/admin/Analytics"));
+const UserManagement = React.lazy(() => import("./pages/admin/UserManagement"));
+const Appointments = React.lazy(() => import("./pages/admin/Appointments"));
+const AdminTransactions = React.lazy(() =>
+  import("./pages/admin/Transactions")
+);
+const AdminHome = React.lazy(() => import("./pages/admin/AdminHome"));
 
-//Doctor nested pages
-import DoctorHome from "./pages/doctor/DoctorHome";
-import DoctorAppointments from "./pages/doctor/Appointments";
-import Prediction from "./pages/Prediction";
+// Doctor nested pages
+const DoctorHome = React.lazy(() => import("./pages/doctor/DoctorHome"));
+const DoctorAppointments = React.lazy(() =>
+  import("./pages/doctor/Appointments")
+);
+const Prediction = React.lazy(() => import("./pages/Prediction"));
+const Error = React.lazy(() => import("./pages/Error"));
+
+// Loading component with spinner
+const LoadingSpinner = () => (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+      backgroundColor: "#f5f5f5",
+    }}
+  >
+    <div style={{ textAlign: "center" }}>
+      <div
+        style={{
+          width: "50px",
+          height: "50px",
+          border: "4px solid #e0e0e0",
+          borderTop: "4px solid #3b82f6",
+          borderRadius: "50%",
+          animation: "spin 1s linear infinite",
+          margin: "0 auto 16px",
+        }}
+      />
+      <p style={{ color: "#666", fontSize: "14px", fontWeight: "500" }}>
+        Loading...
+      </p>
+      <style>
+        {`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+    </div>
+  </div>
+);
 
 const App = () => {
   return (
@@ -29,9 +73,11 @@ const App = () => {
       {/* Protected user routes */}
       <Route
         element={
-          <ProtectedRoute roles={["admin", "patient", "doctor", "user"]}>
-            <SidebarLayout />
-          </ProtectedRoute>
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProtectedRoute roles={["admin", "patient", "doctor", "user"]}>
+              <SidebarLayout />
+            </ProtectedRoute>
+          </Suspense>
         }
       >
         <Route path="/" element={<Home />} />
@@ -47,9 +93,11 @@ const App = () => {
       <Route
         path="/admin"
         element={
-          <ProtectedRoute roles={["admin"]}>
-            <SidebarLayout />
-          </ProtectedRoute>
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProtectedRoute roles={["admin"]}>
+              <SidebarLayout />
+            </ProtectedRoute>
+          </Suspense>
         }
       >
         <Route path="" element={<AdminHome />} />
@@ -63,9 +111,11 @@ const App = () => {
       <Route
         path="/doctor"
         element={
-          <ProtectedRoute roles={["doctor", "admin"]}>
-            <SidebarLayout />
-          </ProtectedRoute>
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProtectedRoute roles={["doctor", "admin"]}>
+              <SidebarLayout />
+            </ProtectedRoute>
+          </Suspense>
         }
       >
         <Route path="" element={<DoctorHome />} />
@@ -75,6 +125,7 @@ const App = () => {
       {/* Public routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<SignupPage />} />
+      <Route path="*" element={<Error />} />
     </Routes>
   );
 };
