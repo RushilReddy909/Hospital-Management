@@ -43,8 +43,8 @@ const useAdminStore = create((set) => ({
     try {
       const [docRes, patRes, userRes] = await Promise.all([
         admin.get("/doctors"),
-        admin.get("patients"),
-        admin.get("users"),
+        admin.get("/patients"),
+        admin.get("/users"),
       ]);
       set({ doctors: docRes.data.data });
       set({ patients: patRes.data.data });

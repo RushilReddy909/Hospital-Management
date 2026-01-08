@@ -1,5 +1,6 @@
 import { validationResult } from "express-validator";
 import doctorModel from "../models/doctorModel.js";
+import appointmentModel from "../models/appointmentModel.js";
 import mongoose from "mongoose";
 import { cache } from "../utils/cache.js";
 
@@ -172,9 +173,20 @@ const deleteDoctor = async (req, res) => {
       });
     }
 
-    // Invalidate cache
+    // Cancel future appointments for this doctor
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    await appointmentModel.updateMany(
+      { doctorID: deleted._id, date: { $gte: today } },
+      { $set: { status: "Cancelled" } }
+    );
+
+    // Invalidate caches
     await cache.del(`doctor:${id}`);
     await cache.del("doctors:all");
+    await cache.del(`doctor:${deleted._id}:appointments`);
+    await cache.del(`user:${id}:doctorId`);
+    await cache.delPattern(`user:*:appointments:*`);
 
     return res.status(200).json({
       success: true,

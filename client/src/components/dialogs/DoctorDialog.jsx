@@ -296,7 +296,7 @@ const DoctorDialog = ({
             className={"font-semibold"}
             onClick={edit ? handleSubmit(onSubmit) : () => setEdit(true)}
           >
-            {edit ? "Save" : "Update"}
+            {edit ? "Save" : "Edit"}
           </Button>
         </DialogFooter>
       </DialogContent>

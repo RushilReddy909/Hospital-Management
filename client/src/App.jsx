@@ -69,64 +69,66 @@ const LoadingSpinner = () => (
 
 const App = () => {
   return (
-    <Routes>
-      {/* Protected user routes */}
-      <Route
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectedRoute roles={["admin", "patient", "doctor", "user"]}>
-              <SidebarLayout />
-            </ProtectedRoute>
-          </Suspense>
-        }
-      >
-        <Route path="/" element={<Home />} />
-        <Route path="/account" element={<Profile />} />
-        <Route path="/doctors" element={<Doctors />} />
-        <Route path="/support" element={<Support />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/transactions" element={<Transactions />} />
-        <Route path="/predictor" element={<Prediction />} />
-      </Route>
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        {/* Protected user routes */}
+        <Route
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <ProtectedRoute roles={["admin", "patient", "doctor", "user"]}>
+                <SidebarLayout />
+              </ProtectedRoute>
+            </Suspense>
+          }
+        >
+          <Route path="/" element={<Home />} />
+          <Route path="/account" element={<Profile />} />
+          <Route path="/doctors" element={<Doctors />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/predictor" element={<Prediction />} />
+        </Route>
 
-      {/* Admin-only routes */}
-      <Route
-        path="/admin"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectedRoute roles={["admin"]}>
-              <SidebarLayout />
-            </ProtectedRoute>
-          </Suspense>
-        }
-      >
-        <Route path="" element={<AdminHome />} />
-        <Route path="analytics" element={<Analytics />} />
-        <Route path="users" element={<UserManagement />} />
-        <Route path="appointments" element={<Appointments />} />
-        <Route path="transactions" element={<AdminTransactions />} />
-      </Route>
+        {/* Admin-only routes */}
+        <Route
+          path="/admin"
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <ProtectedRoute roles={["admin"]}>
+                <SidebarLayout />
+              </ProtectedRoute>
+            </Suspense>
+          }
+        >
+          <Route path="" element={<AdminHome />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="appointments" element={<Appointments />} />
+          <Route path="transactions" element={<AdminTransactions />} />
+        </Route>
 
-      {/* Doctor-only routes */}
-      <Route
-        path="/doctor"
-        element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectedRoute roles={["doctor", "admin"]}>
-              <SidebarLayout />
-            </ProtectedRoute>
-          </Suspense>
-        }
-      >
-        <Route path="" element={<DoctorHome />} />
-        <Route path="appointments" element={<DoctorAppointments />} />
-      </Route>
+        {/* Doctor-only routes */}
+        <Route
+          path="/doctor"
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <ProtectedRoute roles={["doctor", "admin"]}>
+                <SidebarLayout />
+              </ProtectedRoute>
+            </Suspense>
+          }
+        >
+          <Route path="" element={<DoctorHome />} />
+          <Route path="appointments" element={<DoctorAppointments />} />
+        </Route>
 
-      {/* Public routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<SignupPage />} />
-      <Route path="*" element={<Error />} />
-    </Routes>
+        {/* Public routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<SignupPage />} />
+        <Route path="*" element={<Error />} />
+      </Routes>
+    </Suspense>
   );
 };
 

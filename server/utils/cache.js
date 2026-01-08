@@ -1,15 +1,15 @@
-import redis from "redis";
+import { createClient } from "redis";
 
 let redisClient = null;
 
 // Initialize Redis client
 export const initRedis = async () => {
   try {
-    redisClient = redis.createClient({
-      host: process.env.REDIS_HOST || "localhost",
-      port: process.env.REDIS_PORT || 6379,
+    redisClient = createClient({
       password: process.env.REDIS_PASSWORD || undefined,
       socket: {
+        host: process.env.REDIS_HOST || "localhost",
+        port: Number(process.env.REDIS_PORT) || 6379,
         reconnectStrategy: (retries) => Math.min(retries * 50, 500),
       },
     });
@@ -39,12 +39,15 @@ export const cache = {
   async set(key, value, ttl = 300) {
     try {
       if (!redisClient) return null;
+
       const serialized = JSON.stringify(value);
+
       if (ttl) {
         await redisClient.setEx(key, ttl, serialized);
       } else {
         await redisClient.set(key, serialized);
       }
+
       return true;
     } catch (err) {
       console.error(`Cache SET error for ${key}:`, err);
@@ -56,8 +59,15 @@ export const cache = {
   async get(key) {
     try {
       if (!redisClient) return null;
+
       const data = await redisClient.get(key);
-      return data ? JSON.parse(data) : null;
+      if (!data) return null;
+
+      try {
+        return JSON.parse(data);
+      } catch {
+        return data;
+      }
     } catch (err) {
       console.error(`Cache GET error for ${key}:`, err);
       return null;
@@ -75,15 +85,28 @@ export const cache = {
     }
   },
 
-  // Delete multiple keys by pattern
+  // Delete multiple keys by pattern (non-blocking)
   async delPattern(pattern) {
     try {
       if (!redisClient) return 0;
-      const keys = await redisClient.keys(pattern);
-      if (keys.length > 0) {
-        return await redisClient.del(keys);
-      }
-      return 0;
+
+      let cursor = 0;
+      let deleted = 0;
+
+      do {
+        const { cursor: next, keys } = await redisClient.scan(cursor, {
+          MATCH: pattern,
+          COUNT: 100,
+        });
+
+        cursor = Number(next);
+
+        if (keys.length) {
+          deleted += await redisClient.del(keys);
+        }
+      } while (cursor !== 0);
+
+      return deleted;
     } catch (err) {
       console.error(`Cache DELPATTERN error for ${pattern}:`, err);
       return 0;

@@ -1,6 +1,7 @@
 import express from "express";
 import { body } from "express-validator";
 import { verifyToken } from "../middlewares/authMiddleware.js";
+import { createRateLimitMiddleware } from "../middlewares/rateLimitMiddleware.js";
 import {
   createOrder,
   saveTransaction,
@@ -43,15 +44,28 @@ const validateSaveTransaction = [
 
 const router = express.Router();
 
-router.post("/create-order", verifyToken, validateCreateOrder, createOrder);
+// Create rate limit middleware for payment operations
+const paymentRateLimit = createRateLimitMiddleware({
+  identifier: "user",
+  envKey: "RATE_LIMIT_PAYMENT",
+});
+
+router.post(
+  "/create-order",
+  verifyToken,
+  paymentRateLimit,
+  validateCreateOrder,
+  createOrder
+);
 
 router.post(
   "/save-transaction",
   verifyToken,
+  paymentRateLimit,
   validateSaveTransaction,
   saveTransaction
 );
 
-router.get("/", verifyToken, getTransactions);
+router.get("/", verifyToken, paymentRateLimit, getTransactions);
 
 export default router;

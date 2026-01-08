@@ -69,7 +69,7 @@ const UserDialog = ({
     try {
       await admin.put(`/users/${oldUser._id}`, data);
       toast.success("User updated successfully");
-      
+
       callBack();
     } catch (err) {
       toast.error(`Error updating user: ${err.message || err}`);
@@ -141,7 +141,7 @@ const UserDialog = ({
             type="button"
             onClick={edit ? form.handleSubmit(onSubmit) : () => setEdit(true)}
           >
-            {edit ? "Save" : "Update"}
+            {edit ? "Save" : "Edit"}
           </Button>
         </DialogFooter>
       </DialogContent>

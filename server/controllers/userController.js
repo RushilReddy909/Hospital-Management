@@ -76,6 +76,15 @@ const getUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   const { id } = req.params;
+  const requesterId = req.user?.id;
+
+  // Prevent users from modifying their own role
+  if (requesterId && id === requesterId && req.body.role) {
+    return res.status(403).json({
+      success: false,
+      message: "You cannot modify your own role",
+    });
+  }
 
   try {
     const updated = await authModel.findByIdAndUpdate(id, req.body, {

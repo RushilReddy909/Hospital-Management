@@ -254,15 +254,7 @@ const getAppointment = async (req, res) => {
   const { id: appointmentId } = req.params;
 
   try {
-    // Fetch user from DB to get current role (in case it was updated after login)
-    const user = await authModel.findById(userID);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-    const role = user.role;
+    const role = req.user.role;
 
     let filter = {};
 
@@ -271,24 +263,42 @@ const getAppointment = async (req, res) => {
         filter._id = appointmentId;
       }
     } else if (role === "doctor") {
-      const doctor = await doctorModel.findOne({ doctorID: userID });
-      if (!doctor)
-        return res.status(404).json({
-          success: false,
-          message: "Doctor not found",
-        });
-      filter.doctorID = doctor._id;
+      // Try cached doctor ObjectId
+      let doctorId = await cache.get(`user:${userID}:doctorId`);
+      if (!doctorId) {
+        const doctor = await doctorModel
+          .findOne({ doctorID: userID })
+          .select("_id")
+          .lean();
+        if (!doctor)
+          return res.status(404).json({
+            success: false,
+            message: "Doctor not found",
+          });
+        doctorId = doctor._id;
+        await cache.set(`user:${userID}:doctorId`, doctorId, 600);
+      }
+      filter.doctorID = doctorId;
       if (appointmentId && mongoose.Types.ObjectId.isValid(appointmentId)) {
         filter._id = appointmentId;
       }
     } else if (role === "patient") {
-      const patient = await patientModel.findOne({ patientID: userID });
-      if (!patient)
-        return res.status(404).json({
-          success: false,
-          message: "Patient not found",
-        });
-      filter.patientID = patient._id;
+      // Try cached patient ObjectId
+      let patientId = await cache.get(`user:${userID}:patientId`);
+      if (!patientId) {
+        const patient = await patientModel
+          .findOne({ patientID: userID })
+          .select("_id")
+          .lean();
+        if (!patient)
+          return res.status(404).json({
+            success: false,
+            message: "Patient not found",
+          });
+        patientId = patient._id;
+        await cache.set(`user:${userID}:patientId`, patientId, 600);
+      }
+      filter.patientID = patientId;
       if (appointmentId && mongoose.Types.ObjectId.isValid(appointmentId)) {
         filter._id = appointmentId;
       }

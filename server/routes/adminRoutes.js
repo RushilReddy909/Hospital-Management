@@ -1,6 +1,7 @@
 import express from "express";
 import { body } from "express-validator";
 import { verifyToken, adminOnly } from "../middlewares/authMiddleware.js";
+import { createRateLimitMiddleware } from "../middlewares/rateLimitMiddleware.js";
 import {
   addPatient,
   deletePatient,
@@ -38,6 +39,12 @@ import {
 } from "../controllers/appointmentController.js";
 
 const router = express.Router();
+
+// Create rate limit middleware for admin operations
+const adminRateLimit = createRateLimitMiddleware({
+  identifier: "user",
+  envKey: "RATE_LIMIT_ADMIN",
+});
 
 const patientCreateValidation = [
   body("patientID")
@@ -193,22 +200,29 @@ const doctorUpdateValidation = [
 ];
 
 //Verify Admin
-router.get("/verify", verifyToken, adminOnly, async (req, res) => {
-  return res.status(200).json({
-    success: true,
-    message: "Verified Admin",
-  });
-});
+router.get(
+  "/verify",
+  verifyToken,
+  adminOnly,
+  adminRateLimit,
+  async (req, res) => {
+    return res.status(200).json({
+      success: true,
+      message: "Verified Admin",
+    });
+  }
+);
 
 //Patient Routes
-router.get("/patients", verifyToken, adminOnly, getAllPatients);
+router.get("/patients", verifyToken, adminOnly, adminRateLimit, getAllPatients);
 
-router.get("/patients/:id", verifyToken, adminOnly, getPatient);
+router.get("/patients/:id", verifyToken, adminOnly, adminRateLimit, getPatient);
 
 router.post(
   "/patients",
   verifyToken,
   adminOnly,
+  adminRateLimit,
   patientCreateValidation,
   addPatient
 );
@@ -217,30 +231,45 @@ router.put(
   "/patients/:id",
   verifyToken,
   adminOnly,
+  adminRateLimit,
   patientUpdateValidation,
   updatePatient
 );
 
-router.delete("/patients/:id", verifyToken, adminOnly, deletePatient);
+router.delete(
+  "/patients/:id",
+  verifyToken,
+  adminOnly,
+  adminRateLimit,
+  deletePatient
+);
 
 //User Routes
-router.get("/users", verifyToken, adminOnly, getAllUsers);
+router.get("/users", verifyToken, adminOnly, adminRateLimit, getAllUsers);
 
-router.get("/users/:id", verifyToken, adminOnly, getUser);
+router.get("/users/:id", verifyToken, adminOnly, adminRateLimit, getUser);
 
-router.put("/users/:id", verifyToken, adminOnly, userValidation, updateUser);
+router.put(
+  "/users/:id",
+  verifyToken,
+  adminOnly,
+  adminRateLimit,
+  userValidation,
+  updateUser
+);
 
-router.delete("/users/:id", verifyToken, adminOnly, deleteUser);
+router.delete("/users/:id", verifyToken, adminOnly, adminRateLimit, deleteUser);
 
 //Doctor Routes
-router.get("/doctors", verifyToken, adminOnly, getAllDoctors);
+router.get("/doctors", verifyToken, adminOnly, adminRateLimit, getAllDoctors);
 
-router.get("/doctors/:id", verifyToken, adminOnly, getDoctor);
+router.get("/doctors/:id", verifyToken, adminOnly, adminRateLimit, getDoctor);
 
 router.post(
   "/doctors",
   verifyToken,
   adminOnly,
+  adminRateLimit,
   doctorCreateValidation,
   addDoctor
 );
@@ -249,33 +278,82 @@ router.put(
   "/doctors/:id",
   verifyToken,
   adminOnly,
+  adminRateLimit,
   doctorUpdateValidation,
   updateDoctor
 );
 
-router.delete("/doctors/:id", verifyToken, adminOnly, deleteDoctor);
+router.delete(
+  "/doctors/:id",
+  verifyToken,
+  adminOnly,
+  adminRateLimit,
+  deleteDoctor
+);
 
 //Services Routes
-router.get("/services", verifyToken, adminOnly, getAllServices);
+router.get("/services", verifyToken, adminOnly, adminRateLimit, getAllServices);
 
-router.get("/services/:id", verifyToken, adminOnly, getServiceById);
+router.get(
+  "/services/:id",
+  verifyToken,
+  adminOnly,
+  adminRateLimit,
+  getServiceById
+);
 
-router.post("/services", verifyToken, adminOnly, createService);
+router.post("/services", verifyToken, adminOnly, adminRateLimit, createService);
 
-router.put("/services", verifyToken, adminOnly, updateService);
+router.put("/services", verifyToken, adminOnly, adminRateLimit, updateService);
 
-router.delete("/services", verifyToken, adminOnly, deleteService);
+router.delete(
+  "/services",
+  verifyToken,
+  adminOnly,
+  adminRateLimit,
+  deleteService
+);
 
 //Transaction Routes
-router.get("/payment", verifyToken, adminOnly, getAllTransactions);
+router.get(
+  "/payment",
+  verifyToken,
+  adminOnly,
+  adminRateLimit,
+  getAllTransactions
+);
 
 //Appointment Routes
-router.get("/appointments", verifyToken, adminOnly, getAllAppointments);
+router.get(
+  "/appointments",
+  verifyToken,
+  adminOnly,
+  adminRateLimit,
+  getAllAppointments
+);
 
-router.get("/appointments/:id", verifyToken, adminOnly, getAppointment);
+router.get(
+  "/appointments/:id",
+  verifyToken,
+  adminOnly,
+  adminRateLimit,
+  getAppointment
+);
 
-router.post("/appointments", verifyToken, adminOnly, createAppointment);
+router.post(
+  "/appointments",
+  verifyToken,
+  adminOnly,
+  adminRateLimit,
+  createAppointment
+);
 
-router.put("/appointments/:id", verifyToken, adminOnly, updateAppointment);
+router.put(
+  "/appointments/:id",
+  verifyToken,
+  adminOnly,
+  adminRateLimit,
+  updateAppointment
+);
 
 export default router;

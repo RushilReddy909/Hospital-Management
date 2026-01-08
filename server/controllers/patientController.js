@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import patientModel from "../models/patientModel.js";
+import appointmentModel from "../models/appointmentModel.js";
 import authModel from "../models/authModel.js";
 import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
@@ -246,13 +247,30 @@ const deletePatient = async (req, res) => {
   }
 
   try {
-    await patientModel.findOneAndDelete({
+    const deleted = await patientModel.findOneAndDelete({
       patientID: id,
     });
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found",
+      });
+    }
+
+    // Cancel future appointments for this patient
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    await appointmentModel.updateMany(
+      { patientID: deleted._id, date: { $gte: today } },
+      { $set: { status: "Cancelled" } }
+    );
 
     // Invalidate cached profile/role for this patient
     await cache.del(`user:${id}:profile`);
     await cache.del(`user:${id}:role`);
+    await cache.del(`user:${id}:patientId`);
+    await cache.delPattern(`user:${deleted._id}:appointments:*`);
 
     res.status(200).json({
       success: true,

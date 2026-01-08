@@ -6,11 +6,24 @@ import {
   logoutUser,
 } from "../controllers/authController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
+import { createRateLimitMiddleware } from "../middlewares/rateLimitMiddleware.js";
 
 const router = express.Router();
 
+// Create rate limit middlewares
+const loginRateLimit = createRateLimitMiddleware({
+  identifier: "ip",
+  envKey: "RATE_LIMIT_LOGIN",
+});
+
+const registerRateLimit = createRateLimitMiddleware({
+  identifier: "ip",
+  envKey: "RATE_LIMIT_REGISTER",
+});
+
 router.post(
   "/register",
+  registerRateLimit,
   [
     body("username")
       .trim()
@@ -38,6 +51,7 @@ router.post(
 
 router.post(
   "/login",
+  loginRateLimit,
   [
     body("email")
       .isEmail()

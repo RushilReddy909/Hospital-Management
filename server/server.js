@@ -1,5 +1,5 @@
+import "./config/environment.js";
 import express from "express";
-import dotenv from "dotenv";
 import connectDB from "./config/connectDB.js";
 import { initRedis } from "./utils/cache.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -14,8 +14,6 @@ import predictRoutes from "./routes/predictRoutes.js";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import path from "path";
-
-dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const app = express();
