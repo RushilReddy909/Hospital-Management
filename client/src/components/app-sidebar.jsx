@@ -48,7 +48,7 @@ const sidebarConfig = {
     { title: "Appointments", url: "/doctor/appointments", icon: CalendarCheck },
   ],
   user: [
-    { title: "Dashboard", url: "/", icon: Home },
+    { title: "Dashboard", url: "/home", icon: Home },
     { title: "Our Doctors", url: "/doctors", icon: UsersRound },
     { title: "Services", url: "/services", icon: ShieldPlus },
     { title: "Transactions", url: "/transactions", icon: DollarSign },
@@ -80,7 +80,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
-              <Link to="/">
+              <Link to="/home">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={hospital.avatar} alt={hospital.name} />
                   <AvatarFallback className="rounded-lg">NC</AvatarFallback>

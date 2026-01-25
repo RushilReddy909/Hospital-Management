@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom";
 // Lazy load all page components
 const LoginPage = React.lazy(() => import("./pages/LoginPage"));
 const SignupPage = React.lazy(() => import("./pages/SignupPage"));
+const LandingPage = React.lazy(() => import("./pages/LandingPage"));
 const Home = React.lazy(() => import("./pages/Home"));
 const Profile = React.lazy(() => import("./pages/Account"));
 const SidebarLayout = React.lazy(() => import("./components/SidebarLayout"));
@@ -17,15 +18,15 @@ const Transactions = React.lazy(() => import("./pages/Transactions"));
 const Analytics = React.lazy(() => import("./pages/admin/Analytics"));
 const UserManagement = React.lazy(() => import("./pages/admin/UserManagement"));
 const Appointments = React.lazy(() => import("./pages/admin/Appointments"));
-const AdminTransactions = React.lazy(() =>
-  import("./pages/admin/Transactions")
+const AdminTransactions = React.lazy(
+  () => import("./pages/admin/Transactions"),
 );
 const AdminHome = React.lazy(() => import("./pages/admin/AdminHome"));
 
 // Doctor nested pages
 const DoctorHome = React.lazy(() => import("./pages/doctor/DoctorHome"));
-const DoctorAppointments = React.lazy(() =>
-  import("./pages/doctor/Appointments")
+const DoctorAppointments = React.lazy(
+  () => import("./pages/doctor/Appointments"),
 );
 const Prediction = React.lazy(() => import("./pages/Prediction"));
 const Error = React.lazy(() => import("./pages/Error"));
@@ -71,6 +72,9 @@ const App = () => {
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
+        {/* Public landing page as default */}
+        <Route path="/" element={<LandingPage />} />
+
         {/* Protected user routes */}
         <Route
           element={
@@ -81,7 +85,7 @@ const App = () => {
             </Suspense>
           }
         >
-          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/account" element={<Profile />} />
           <Route path="/doctors" element={<Doctors />} />
           <Route path="/support" element={<Support />} />
