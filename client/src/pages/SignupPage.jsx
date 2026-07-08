@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,7 +40,7 @@ const signupSchema = z
 
 export default function SignupPage() {
   const navigate = useNavigate();
-  const [verify, setVerify] = useState(true);
+  const token = localStorage.getItem("token");
 
   // ✅ Form Setup
   const form = useForm({
@@ -52,13 +53,15 @@ export default function SignupPage() {
     },
   });
 
-  const onSubmit = async (data) => {
-    try {
-      await api.post("/auth/register", data);
+  // ✅ Registration via TanStack — isPending drives the button
+  const registerMutation = useMutation({
+    mutationFn: (data) => api.post("/auth/register", data),
+    onSuccess: () => {
       navigate("/login", {
         state: { message: "Registration successful! Please log in." },
       });
-    } catch (err) {
+    },
+    onError: (err) => {
       toast.error(
         err.response?.data?.message ||
           err.response?.data?.errors?.[0] ||
@@ -72,30 +75,31 @@ export default function SignupPage() {
           theme: "colored",
         },
       );
-    }
-  };
+    },
+  });
+
+  const onSubmit = (data) => registerMutation.mutate(data);
+
+  // ✅ If already logged in, verify token and redirect home
+  const {
+    data: verified,
+    isLoading: verifying,
+    isError: verifyFailed,
+  } = useQuery({
+    queryKey: ["auth-verify"],
+    queryFn: async () => {
+      const res = await api.get("/user/verify");
+      return res.data ?? true;
+    },
+    enabled: !!token,
+    retry: false,
+  });
 
   useEffect(() => {
-    const verifyToken = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return setVerify(false);
+    if (verified) navigate("/home", { replace: true });
+  }, [verified, navigate]);
 
-      try {
-        await api.get("/user/verify", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        navigate("/home", { replace: true });
-      } catch {
-        setVerify(false);
-      }
-    };
-
-    verifyToken();
-  }, [navigate]);
-
-  if (verify) return null;
+  if (token && verifying && !verifyFailed) return null;
 
   return (
     <>
@@ -242,9 +246,9 @@ export default function SignupPage() {
                       <Button
                         type="submit"
                         className="w-full font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
-                        disabled={form.formState.isSubmitting}
+                        disabled={registerMutation.isPending}
                       >
-                        {form.formState.isSubmitting ? (
+                        {registerMutation.isPending ? (
                           <>
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             Registering...

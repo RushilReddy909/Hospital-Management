@@ -10,23 +10,28 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { toast } from "react-toastify";
+import { useMutation } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { admin } from "@/utils/api";
 
 const AdminDialog = ({ open, onOpenChange, oldUser, callBack }) => {
-  const handleAdmin = async () => {
-    try {
-      {
-        ["patient", "doctor"].includes(oldUser.role) &&
-          (await admin.delete(`/${oldUser.role}s/${oldUser._id}`));
+  const promoteMutation = useMutation({
+    mutationFn: async () => {
+      if (["patient", "doctor"].includes(oldUser.role)) {
+        await admin.delete(`/${oldUser.role}s/${oldUser._id}`);
       }
-      const res = await admin.put(`/users/${oldUser._id}`, { role: "admin" });
+      await admin.put(`/users/${oldUser._id}`, { role: "admin" });
+    },
+    onSuccess: () => {
       toast.success("User is now an admin");
-
       callBack();
-    } catch (err) {
+    },
+    onError: (err) => {
       toast.error(`Error doing operation: ${err.response?.data?.error}`);
-    }
-  };
+    },
+  });
+
+  const handleAdmin = () => promoteMutation.mutate();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -48,8 +53,16 @@ const AdminDialog = ({ open, onOpenChange, oldUser, callBack }) => {
             className={"font-semibold"}
             variant={"destructive"}
             onClick={handleAdmin}
+            disabled={promoteMutation.isPending}
           >
-            Confirm
+            {promoteMutation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Promoting...
+              </>
+            ) : (
+              "Confirm"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

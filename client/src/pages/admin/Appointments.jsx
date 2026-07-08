@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
 import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
   Table,
   TableHeader,
   TableBody,
@@ -36,13 +41,13 @@ const schema = z.object({
 });
 
 const Appointments = () => {
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState(null);
+
+  const queryClient = useQueryClient();
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -54,44 +59,39 @@ const Appointments = () => {
     },
   });
 
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const { data } = await admin.get("/appointments");
-        if (data.success) {
-          setAppointments(data.data);
-        } else {
-          toast.error("Failed to fetch appointments");
-        }
-      } catch (error) {
-        console.error("Error fetching appointments:", error);
-        toast.error("Something went wrong");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const {
+    data: appointments = [],
+    isLoading: loading,
+    isError,
+  } = useQuery({
+    queryKey: ["admin", "appointments"],
+    queryFn: async () => {
+      const { data } = await admin.get("/appointments");
+      if (!data.success) throw new Error("Failed to fetch appointments");
+      return data.data;
+    },
+  });
 
-    fetchAppointments();
-  }, []);
+  useEffect(() => {
+    if (isError) toast.error("Something went wrong");
+  }, [isError]);
 
   const openCancelDialog = (appointment) => {
     setSelectedAppointment(appointment);
     setCancelDialogOpen(true);
   };
 
-  const confirmCancel = async () => {
-    try {
-      await admin.post(`/appointments/${selectedAppointment._id}/cancel`);
+  const cancelMutation = useMutation({
+    mutationFn: (id) => admin.post(`/appointments/${id}/cancel`),
+    onSuccess: () => {
       toast.success("Appointment cancelled");
-      setAppointments((prev) =>
-        prev.filter((a) => a._id !== selectedAppointment._id)
-      );
-    } catch (error) {
-      toast.error("Failed to cancel appointment");
-    } finally {
-      setCancelDialogOpen(false);
-    }
-  };
+      queryClient.invalidateQueries({ queryKey: ["admin", "appointments"] });
+    },
+    onError: () => toast.error("Failed to cancel appointment"),
+    onSettled: () => setCancelDialogOpen(false),
+  });
+
+  const confirmCancel = () => cancelMutation.mutate(selectedAppointment._id);
 
   return (
     <div className="p-6">
@@ -179,8 +179,19 @@ const Appointments = () => {
             >
               Keep Appointment
             </Button>
-            <Button variant="destructive" onClick={confirmCancel}>
-              Confirm Cancel
+            <Button
+              variant="destructive"
+              onClick={confirmCancel}
+              disabled={cancelMutation.isPending}
+            >
+              {cancelMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Cancelling...
+                </>
+              ) : (
+                "Confirm Cancel"
+              )}
             </Button>
           </div>
         </DialogContent>

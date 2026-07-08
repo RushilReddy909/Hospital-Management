@@ -29,6 +29,8 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { admin } from "@/utils/api";
 import { toast } from "react-toastify";
 
@@ -117,11 +119,10 @@ const DoctorDialog = ({
     setEdit(!viewOnly);
   }, [open, oldUser, reset, roleData, viewOnly]);
 
-  const onSubmit = async (data) => {
-    try {
+  const saveMutation = useMutation({
+    mutationFn: async (data) => {
       if (viewOnly) {
         await admin.put(`/doctors/${data.doctorID}`, data);
-        toast.success("Successfully updated");
       } else {
         if (["user", "admin"].includes(oldUser.role)) {
           await admin.put(`/users/${oldUser._id}`, { role: "doctor" });
@@ -129,15 +130,19 @@ const DoctorDialog = ({
           await admin.delete(`${oldUser.role}s/${oldUser._id}`);
         }
         await admin.post("/doctors", data);
-        toast.success("Successfully added");
       }
-
+    },
+    onSuccess: () => {
+      toast.success(viewOnly ? "Successfully updated" : "Successfully added");
       callBack();
-    } catch (err) {
+    },
+    onError: (err) => {
       toast.error("Error saving doctor");
       console.error(err);
-    }
-  };
+    },
+  });
+
+  const onSubmit = (data) => saveMutation.mutate(data);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -294,9 +299,21 @@ const DoctorDialog = ({
           <Button
             type="button"
             className={"font-semibold"}
+            disabled={saveMutation.isPending}
             onClick={edit ? handleSubmit(onSubmit) : () => setEdit(true)}
           >
-            {edit ? "Save" : "Edit"}
+            {edit ? (
+              saveMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )
+            ) : (
+              "Edit"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

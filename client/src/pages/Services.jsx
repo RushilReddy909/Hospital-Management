@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { api } from "@/utils/api";
 import React, { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { Filter, ShoppingCart, Clock, Info, Check } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
@@ -34,24 +35,24 @@ const CATEGORIES = [
 ];
 
 const Services = () => {
-  const [services, setServices] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sheetOpen, setSheetOpen] = useState(false);
   const cart = useCartStore((state) => state.cart);
 
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const res = await api.get("/services");
-        setServices(res.data.data);
-      } catch (err) {
-        toast.error("Error fetching services");
-        console.log(err);
-      }
-    };
+  const {
+    data: services = [],
+    isError,
+  } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const res = await api.get("/services");
+      return res.data.data;
+    },
+  });
 
-    fetchServices();
-  }, []);
+  useEffect(() => {
+    if (isError) toast.error("Error fetching services");
+  }, [isError]);
 
   const filteredServices =
     selectedCategory === "all"

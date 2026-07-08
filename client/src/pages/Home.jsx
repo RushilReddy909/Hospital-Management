@@ -1,5 +1,6 @@
 import { api } from "@/utils/api";
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -16,29 +17,25 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 
 const Home = () => {
-  const [details, setDetails] = useState(null);
-  const [nextAppointment, setNextAppointment] = useState(null);
-  const [showNoPatientAlert, setShowNoPatientAlert] = useState(false);
+  // Fetch patient details + next pending appointment in one query.
+  // If the patient record doesn't exist the request errors -> show the alert.
+  const { data, isError: showNoPatientAlert } = useQuery({
+    queryKey: ["home-dashboard"],
+    queryFn: async () => {
+      const res = await api.get("/patient");
+      const details = res.data.data;
 
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const res = await api.get("/patient");
-        const data = res.data.data;
-        setDetails(data);
+      const appointments = await api.get("/appointment");
+      const pendingAppointments = appointments.data.data.filter(
+        (appointment) => appointment.status === "Pending"
+      );
+      return { details, nextAppointment: pendingAppointments[0] ?? null };
+    },
+    retry: false,
+  });
 
-        const appointments = await api.get("/appointment");
-        const pendingAppointments = appointments.data.data.filter(
-          (appointment) => appointment.status === "Pending"
-        );
-        setNextAppointment(pendingAppointments[0]);
-      } catch (err) {
-        setShowNoPatientAlert(true);
-      }
-    };
-
-    checkUser();
-  }, []);
+  const details = data?.details ?? null;
+  const nextAppointment = data?.nextAppointment ?? null;
 
   return (
     <div className="min-h-screen flex flex-col items-center py-10 bg-background text-foreground transition-colors">

@@ -23,95 +23,75 @@ const createAppointment = async (req, res) => {
     timeSlot,
   } = req.body;
 
-  // 1. Start a Session
-  const session = await mongoose.startSession();
-
   try {
-    // 2. Start Transaction with SERIALIZABLE isolation (Snapshot)
-    session.startTransaction({
-      readConcern: { level: "snapshot" },
-      writeConcern: { w: "majority" },
-    });
-
     const effectivePatientUserId =
       req.user.role === "admin" ? patientUserIdFromBody : requesterUserId;
 
     if (!effectivePatientUserId) {
-      if (session.inTransaction()) {
-        await session.abortTransaction();
-      }
-      session.endSession();
       return res.status(400).json({
         success: false,
         message: "patientID is required when booking as admin",
       });
     }
 
-    const pat = await patientModel
-      .findOne({ patientID: effectivePatientUserId })
-      .session(session);
-    if (!pat) {
-      throw new Error("Patient profile not found");
-    }
-    const patientID = pat._id;
-
-    // Doctor Schedule Locking / Availability Check
     if (!doctorDocId) {
-      if (session.inTransaction()) {
-        await session.abortTransaction();
-      }
-      session.endSession();
       return res.status(400).json({
         success: false,
         message: "Doctor ID is required",
       });
     }
 
-    const doctor = await doctorModel.findById(doctorDocId).session(session);
+    const pat = await patientModel.findOne({
+      patientID: effectivePatientUserId,
+    });
+    if (!pat) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient profile not found",
+      });
+    }
+    const patientID = pat._id;
 
+    const doctor = await doctorModel.findById(doctorDocId);
     if (!doctor) {
-      console.error(
-        `Doctor not found for doctorID: ${doctorDocId}, doctors collection check needed`
-      );
-      throw new Error(
-        `Doctor profile not found for ID ${doctorDocId}. The doctor may not have created their profile yet.`
-      );
+      return res.status(404).json({
+        success: false,
+        message:
+          "Doctor profile not found. The doctor may not have created their profile yet.",
+      });
     }
 
     if (doctor.status === "Away") {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({
         success: false,
         message: "Doctor is currently unavailable (Status: Away)",
       });
     }
 
-    // Enforce one booking per doctor per timeSlot per date
-    const slotConflict = await appointmentModel
-      .findOne({ doctorID: doctor._id, date, timeSlot })
-      .session(session);
+    // Normalize the date to the start of the day so a slot is unique per calendar day
+    const appointmentDate = new Date(date);
+    appointmentDate.setHours(0, 0, 0, 0);
+
+    // One booking per doctor per timeSlot per day
+    const slotConflict = await appointmentModel.findOne({
+      doctorID: doctor._id,
+      date: appointmentDate,
+      timeSlot,
+    });
     if (slotConflict) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(409).json({
         success: false,
         message: "This time slot is already booked for the doctor.",
       });
     }
 
-    // Conflict Detection: Check if patient already booked for this doctor on same date
-    const existingPatientBooking = await appointmentModel
-      .findOne({
-        patientID,
-        doctorID: doctor._id,
-        date,
-      })
-      .session(session);
-
+    // Prevent the same patient booking this doctor twice on the same day
+    const existingPatientBooking = await appointmentModel.findOne({
+      patientID,
+      doctorID: doctor._id,
+      date: appointmentDate,
+    });
     if (existingPatientBooking) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(409).json({
         success: false,
         message:
@@ -119,43 +99,31 @@ const createAppointment = async (req, res) => {
       });
     }
 
-    // Create Appointment
-    const appointment = new appointmentModel({
+    await appointmentModel.create({
       patientID,
       doctorID: doctor._id,
-      date,
+      date: appointmentDate,
       timeSlot,
       status: "Pending",
       reason: req.body.reason,
     });
-
-    // Save with the session
-    await appointment.save({ session });
-
-    // 3. Commit Transaction
-    await session.commitTransaction();
-    session.endSession();
 
     return res.status(201).json({
       success: true,
       message: "Appointment successfully booked",
     });
   } catch (err) {
-    // 4. Rollback on failure
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
-    session.endSession();
-
-    // Check for MongoDB duplicate key error (Race condition catcher)
+    // A duplicate-key error here means the unique index caught a real clash.
+    // The index name is logged so you can spot a stale/incorrect index.
     if (err.code === 11000) {
+      console.error("Duplicate key on appointment insert:", err.keyValue, err.message);
       return res.status(409).json({
         success: false,
-        message: "Slot was just booked by another user. Please try again.",
+        message: "This time slot is already booked for the doctor.",
       });
     }
 
-    console.error("Transaction Error:", err);
+    console.error("Create appointment error:", err);
     return res.status(500).json({
       success: false,
       message: "Appointment could not be created due to a server error",

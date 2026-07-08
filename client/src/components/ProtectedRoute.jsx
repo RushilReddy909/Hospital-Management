@@ -1,39 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Navigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 
 // Accept `children` and optional `roles` prop
 const ProtectedRoute = ({ children, roles = [] }) => {
-  const [status, setStatus] = useState({ loading: true, allowed: false });
+  const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
+  const {
+    data: user,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["auth-user"],
+    queryFn: async () => {
+      const res = await api.get("/user"); // expected to return user object
+      return res.data.data;
+    },
+    enabled: !!token, // don't fetch if there's no token
+    retry: false,
+  });
 
-    if (!token) {
-      setStatus({ loading: false, allowed: false });
-      return;
-    }
+  if (!token) return <Navigate to="/login" replace />;
+  if (isLoading) return null;
+  if (isError || !user) return <Navigate to="/login" replace />;
 
-    const verify = async () => {
-      try {
-        const res = await api.get("/user"); // expected to return user object
-        const user = res.data.data;
-
-        if (roles.length === 0 || roles.includes(user.role)) {
-          setStatus({ loading: false, allowed: true });
-        } else {
-          setStatus({ loading: false, allowed: false });
-        }
-      } catch (err) {
-        setStatus({ loading: false, allowed: false });
-      }
-    };
-
-    verify();
-  }, [roles]);
-
-  if (status.loading) return null;
-  if (!status.allowed) return <Navigate to="/login" replace />;
+  const allowed = roles.length === 0 || roles.includes(user.role);
+  if (!allowed) return <Navigate to="/login" replace />;
 
   return children;
 };

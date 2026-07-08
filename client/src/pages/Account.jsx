@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { api } from "@/utils/api";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -90,13 +91,10 @@ const schema = z.object({
 });
 
 const Account = () => {
-  const [details, setDetails] = useState({});
   const [open, setOpen] = useState(false);
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [alert, setAlert] = useState(false);
 
   const { role } = useUserStore();
+  const queryClient = useQueryClient();
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -109,53 +107,59 @@ const Account = () => {
     },
   });
 
-  const onSubmit = async (data) => {
-    try {
-      const res = await api.post("/patient", data);
-      setDetails(res.data.data);
+  // Fetch patient profile + appointment history together
+  const {
+    data,
+    isLoading: loading,
+    error,
+  } = useQuery({
+    queryKey: ["account"],
+    queryFn: async () => {
+      const res = await api.get("/patient");
+      const appoint = await api.get("/appointment");
+      return { details: res.data.data, appointments: appoint.data.data };
+    },
+    retry: false,
+  });
+
+  const details = data?.details ?? {};
+  const appointments = data?.appointments ?? [];
+  // A 404 means the patient record doesn't exist yet -> show create-account alert
+  const alert = error?.response?.status === 404;
+
+  useEffect(() => {
+    if (error && error.response?.status !== 404) {
+      toast.error(error.response?.data?.message || "Error fetching your data");
+    }
+  }, [error]);
+
+  // Update (or create) profile — isPending drives the button spinner
+  const updateMutation = useMutation({
+    mutationFn: (values) => api.post("/patient", values),
+    onSuccess: () => {
       toast.success("Profile updated successfully!");
       setOpen(false);
-    } catch (err) {
+      queryClient.invalidateQueries({ queryKey: ["account"] });
+    },
+    onError: (err) => {
       toast.error(
         err.response?.data?.errors?.[0] || "Failed to update profile"
       );
-    }
-  };
+    },
+  });
+
+  const onSubmit = (values) => updateMutation.mutate(values);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get("/patient");
-        setDetails(res.data.data);
-
-        const appoint = await api.get("/appointment");
-        setAppointments(appoint.data.data);
-      } catch (err) {
-        if (err.response?.status !== 404) {
-          toast.error(
-            err.response?.data?.message || "Error fetching your data"
-          );
-        } else {
-          setAlert(true);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
+    const d = data?.details ?? {};
     form.reset({
-      name: details.name || "",
-      age: details.age || "",
-      gender: details.gender || "",
-      phone: details.phone || "",
-      description: details.description || "",
+      name: d.name || "",
+      age: d.age || "",
+      gender: d.gender || "",
+      phone: d.phone || "",
+      description: d.description || "",
     });
-  }, [details]);
+  }, [data, form]);
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-background text-foreground">
@@ -413,9 +417,9 @@ const Account = () => {
                                 <Button
                                   type="submit"
                                   className="font-semibold px-6 py-2"
-                                  disabled={form.formState.isSubmitting}
+                                  disabled={updateMutation.isPending}
                                 >
-                                  {form.formState.isSubmitting ? (
+                                  {updateMutation.isPending ? (
                                     <>
                                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                                       Updating...

@@ -17,23 +17,31 @@ import {
   BadgeInfo,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 const favicon = "/favicon.png";
 
 const CartSheet = ({ open, onOpenChange }) => {
-  const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+  const razorpayKey = "rzp_test_O3kKj6XNefSafz";
   const cart = useCartStore((state) => state.cart);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const clearCart = useCartStore((state) => state.clearCart);
   const getTotal = useCartStore((state) => state.getTotal);
 
-  const handleCheckout = async () => {
-    onOpenChange(false);
-    try {
-      const amount = getTotal();
-      const { data } = await api.post("/payment/create-order", { amount });
+  // Persist the transaction once Razorpay confirms payment
+  const saveTransactionMutation = useMutation({
+    mutationFn: (payload) => api.post("/payment/save-transaction", payload),
+    onSuccess: () => useCartStore.getState().clearCart(),
+  });
 
-      if (!data.success) throw new Error("Order creation failed");
+  // Create the order, then hand off to the Razorpay checkout widget
+  const createOrderMutation = useMutation({
+    mutationFn: (amount) => api.post("/payment/create-order", { amount }),
+    onSuccess: ({ data }) => {
+      if (!data.success) {
+        toast.error("Payment failed. Please try again.");
+        return;
+      }
 
       const options = {
         key: razorpayKey,
@@ -43,8 +51,8 @@ const CartSheet = ({ open, onOpenChange }) => {
         description: "Service Payment",
         image: favicon,
         order_id: data.order.id,
-        handler: async function (response) {
-          await api.post("/payment/save-transaction", {
+        handler: function (response) {
+          saveTransactionMutation.mutate({
             orderID: response.razorpay_order_id,
             paymentID: response.razorpay_payment_id,
             razorpaySignature: response.razorpay_signature,
@@ -54,7 +62,6 @@ const CartSheet = ({ open, onOpenChange }) => {
             status: "success",
             items: cart,
           });
-          useCartStore.getState().clearCart();
         },
         prefill: {
           name: "Patient Name",
@@ -68,10 +75,16 @@ const CartSheet = ({ open, onOpenChange }) => {
 
       const rzp = new window.Razorpay(options);
       rzp.open();
-    } catch (err) {
+    },
+    onError: (err) => {
       console.error(err);
       toast.error("Payment failed. Please try again.");
-    }
+    },
+  });
+
+  const handleCheckout = () => {
+    onOpenChange(false);
+    createOrderMutation.mutate(getTotal());
   };
 
   return (
@@ -141,8 +154,12 @@ const CartSheet = ({ open, onOpenChange }) => {
                 <Trash2 className="mr-2 w-4 h-4" />
                 Clear
               </Button>
-              <Button onClick={handleCheckout} className="w-1/2 font-semibold">
-                Checkout
+              <Button
+                onClick={handleCheckout}
+                disabled={createOrderMutation.isPending}
+                className="w-1/2 font-semibold"
+              >
+                {createOrderMutation.isPending ? "Processing..." : "Checkout"}
               </Button>
             </div>
           </SheetFooter>

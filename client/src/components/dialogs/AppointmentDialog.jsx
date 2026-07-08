@@ -22,7 +22,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, Loader2 } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "react-toastify";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 
 const AppointmentDialog = ({
@@ -43,22 +44,36 @@ const AppointmentDialog = ({
   mode = "create",
 }) => {
   const isEdit = mode === "edit";
+  const queryClient = useQueryClient();
 
-  const handleSubmit = async (values) => {
-    try {
-      if (isEdit) {
-        await api.put(`/appointment/${appointment._id}`, values);
-        toast.success("Appointment rescheduled successfully");
-      } else {
-        await api.post("/appointment", values);
-        toast.success("Appointment scheduled successfully");
-      }
+  const saveMutation = useMutation({
+    mutationFn: (values) =>
+      isEdit
+        ? api.put(`/appointment/${appointment._id}`, values)
+        : api.post("/appointment", values),
+    onSuccess: () => {
+      toast.success(
+        isEdit
+          ? "Appointment rescheduled successfully"
+          : "Appointment scheduled successfully"
+      );
+      // Refresh any appointment lists currently cached
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey.some(
+            (key) =>
+              typeof key === "string" && key.toLowerCase().includes("appointment")
+          ),
+      });
       setOpen(false);
-    } catch (err) {
+    },
+    onError: (err) => {
       toast.error("Appointment could not be scheduled");
       console.error(err);
-    }
-  };
+    },
+  });
+
+  const handleSubmit = (values) => saveMutation.mutate(values);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -91,7 +106,7 @@ const AppointmentDialog = ({
                 render={({ field }) => (
                   <FormItem className="flex flex-col gap-3 w-1/2">
                     <FormLabel>Date of Appointment</FormLabel>
-                    <Popover>
+                    <Popover modal>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -163,8 +178,21 @@ const AppointmentDialog = ({
             />
 
             <div className="w-full flex justify-end">
-              <Button type="submit" className="font-semibold">
-                {isEdit ? "Update" : "Confirm"}
+              <Button
+                type="submit"
+                className="font-semibold"
+                disabled={saveMutation.isPending}
+              >
+                {saveMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    {isEdit ? "Updating..." : "Confirming..."}
+                  </>
+                ) : isEdit ? (
+                  "Update"
+                ) : (
+                  "Confirm"
+                )}
               </Button>
             </div>
           </form>

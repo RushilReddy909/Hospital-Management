@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -16,21 +17,15 @@ import { Badge } from "@/components/ui/badge";
 import { FileText } from "lucide-react";
 
 const Transactions = () => {
-  const [transactions, setTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const { data } = await api.get("/payment");
-        if (data.success) setTransactions(data.data);
-      } catch (error) {
-        console.error("Error fetching transactions:", error);
-      }
-    };
-
-    fetchTransactions();
-  }, []);
+  const { data: transactions = [] } = useQuery({
+    queryKey: ["payments"],
+    queryFn: async () => {
+      const { data } = await api.get("/payment");
+      return data.success ? data.data : [];
+    },
+  });
 
   const filteredTransactions = transactions.filter((txn) => {
     const term = searchTerm.toLowerCase();

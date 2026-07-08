@@ -23,6 +23,8 @@ import {
   FormMessage,
 } from "../ui/form";
 
+import { useMutation } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { admin } from "@/utils/api";
 import { toast } from "react-toastify";
 
@@ -65,16 +67,18 @@ const UserDialog = ({
     setEdit(!viewOnly);
   }, [roleData, open, viewOnly]);
 
-  const onSubmit = async (data) => {
-    try {
-      await admin.put(`/users/${oldUser._id}`, data);
+  const saveMutation = useMutation({
+    mutationFn: (data) => admin.put(`/users/${oldUser._id}`, data),
+    onSuccess: () => {
       toast.success("User updated successfully");
-
       callBack();
-    } catch (err) {
+    },
+    onError: (err) => {
       toast.error(`Error updating user: ${err.message || err}`);
-    }
-  };
+    },
+  });
+
+  const onSubmit = (data) => saveMutation.mutate(data);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -139,9 +143,21 @@ const UserDialog = ({
           <Button
             className="font-semibold"
             type="button"
+            disabled={saveMutation.isPending}
             onClick={edit ? form.handleSubmit(onSubmit) : () => setEdit(true)}
           >
-            {edit ? "Save" : "Edit"}
+            {edit ? (
+              saveMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )
+            ) : (
+              "Edit"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

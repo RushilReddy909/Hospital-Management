@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useUserStore } from "@/store/userStore";
@@ -35,7 +36,7 @@ const loginSchema = z.object({
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [verify, setVerify] = useState(true);
+  const token = localStorage.getItem("token");
 
   const setUser = useUserStore((state) => state.setUser);
 
@@ -48,13 +49,15 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = async (data) => {
-    try {
-      const res = await api.post("/auth/login", data);
+  // ✅ Login handled by TanStack — isPending drives the button, onError the toast
+  const loginMutation = useMutation({
+    mutationFn: (data) => api.post("/auth/login", data),
+    onSuccess: (res) => {
       localStorage.setItem("token", res.data.token);
       setUser(res.data.data);
       navigate("/home");
-    } catch (err) {
+    },
+    onError: (err) => {
       toast.error(
         err.response?.data?.message ||
           err.response?.data?.errors?.[0] ||
@@ -68,29 +71,32 @@ export default function LoginPage() {
           theme: "colored",
         },
       );
-    }
-  };
+    },
+  });
+
+  const onSubmit = (data) => loginMutation.mutate(data);
+
+  // ✅ Verify existing token via TanStack; only runs when a token is present
+  const {
+    data: verifiedUser,
+    isLoading: verifying,
+    isError: verifyFailed,
+  } = useQuery({
+    queryKey: ["auth-user"],
+    queryFn: async () => {
+      const res = await api.get("/user");
+      return res.data.data;
+    },
+    enabled: !!token,
+    retry: false,
+  });
 
   useEffect(() => {
-    const verifyToken = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return setVerify(false);
-
-      try {
-        const res = await api.get("/user", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setUser(res.data.data);
-        if (location.pathname === "/login")
-          navigate("/home", { replace: true });
-      } catch {
-        setVerify(false);
-      }
-    };
-
-    verifyToken();
-  }, [navigate, location.pathname]);
+    if (verifiedUser) {
+      setUser(verifiedUser);
+      if (location.pathname === "/login") navigate("/home", { replace: true });
+    }
+  }, [verifiedUser, location.pathname, navigate, setUser]);
 
   useEffect(() => {
     if (location.state?.message) {
@@ -104,7 +110,8 @@ export default function LoginPage() {
     }
   }, [location.state]);
 
-  if (verify) return false;
+  // While a token is being verified, render nothing (avoids flashing the form)
+  if (token && verifying && !verifyFailed) return null;
 
   return (
     <>
@@ -219,9 +226,9 @@ export default function LoginPage() {
                       <Button
                         type="submit"
                         className="w-full font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
-                        disabled={form.formState.isSubmitting}
+                        disabled={loginMutation.isPending}
                       >
-                        {form.formState.isSubmitting ? (
+                        {loginMutation.isPending ? (
                           <>
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             Logging in...

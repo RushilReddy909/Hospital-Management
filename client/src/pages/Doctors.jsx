@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,10 +31,8 @@ const schema = z.object({
 });
 
 const Doctors = () => {
-  const [doctors, setDoctors] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -45,33 +44,22 @@ const Doctors = () => {
     },
   });
 
-  const onSubmit = async (data) => {
-    try {
-      await api.post("/appointment", data);
-      toast.success("Appointment scheduled successfully");
-      form.reset();
-      setOpen(false);
-    } catch (err) {
-      toast.error("Appointment could not be scheduled");
-      console.log(err);
-    }
-  };
+  // Booking itself is handled inside <AppointmentDialog />.
+  const {
+    data: doctors = [],
+    isLoading: loading,
+    isError,
+  } = useQuery({
+    queryKey: ["doctors"],
+    queryFn: async () => {
+      const res = await api.get("/doctor");
+      return res.data.data;
+    },
+  });
 
   useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get("/doctor");
-        setDoctors(res.data.data);
-      } catch (err) {
-        toast.error("Failed to fetch doctors");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDoctors();
-  }, []);
+    if (isError) toast.error("Failed to fetch doctors");
+  }, [isError]);
 
   return (
     <div className="p-6">
@@ -142,18 +130,9 @@ const Doctors = () => {
                     });
                     setOpen(true);
                   }}
-                  disabled={
-                    doctor.status === "Away" || form.formState.isSubmitting
-                  }
+                  disabled={doctor.status === "Away"}
                 >
-                  {form.formState.isSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Booking...
-                    </>
-                  ) : (
-                    "Book Appointment"
-                  )}
+                  Book Appointment
                 </Button>
               </CardFooter>
             </Card>

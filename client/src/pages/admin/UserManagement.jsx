@@ -9,7 +9,8 @@ import {
   getSortedRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, Plus } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { ArrowUpDown, Loader2, MoreHorizontal, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,13 +80,15 @@ const UserManagement = () => {
     fetchAll();
   }, [fetchAll]);
 
-  const fetchRoleData = async (user) => {
-    if (!user) return;
-    try {
-      const res = await admin.get(`/${user.role}s/${user._id}`);
-      setRoleData(res.data.data);
+  // On-demand fetch of a user's role-specific record (triggered by a click)
+  const roleDataMutation = useMutation({
+    mutationFn: (user) =>
+      admin.get(`/${user.role}s/${user._id}`).then((res) => res.data.data),
+    onSuccess: (data) => {
+      setRoleData(data);
       setModalOpen(true);
-    } catch (err) {
+    },
+    onError: (err, user) => {
       if (err?.response?.status === 404) {
         toast.error(
           `${
@@ -95,40 +98,39 @@ const UserManagement = () => {
       } else {
         toast.error("Error fetching Data");
       }
-    }
+    },
+  });
+
+  const fetchRoleData = (user) => {
+    if (!user) return;
+    roleDataMutation.mutate(user);
   };
 
-  const fetchUserData = async (user) => {
-    try {
-      const res = await admin.get(`/users/${user._id}`);
-      setRoleData(res.data.data);
+  const userDataMutation = useMutation({
+    mutationFn: (user) =>
+      admin.get(`/users/${user._id}`).then((res) => res.data.data),
+    onSuccess: (data) => {
+      setRoleData(data);
       setModalOpen(true);
-    } catch (err) {
-      toast.error("Error occurred while fetching data");
-    }
-  };
+    },
+    onError: () => toast.error("Error occurred while fetching data"),
+  });
 
-  const handleDemoteToUser = async () => {
-    if (!selectedUser) return;
+  const fetchUserData = (user) => userDataMutation.mutate(user);
 
-    // Prevent self-demotion
-    if (selectedUser._id === currentUserId) {
-      toast.error("You cannot change your own role!");
-      setDemoteDialogOpen(false);
-      return;
-    }
-
-    try {
+  // Demote a user back to the base "user" role
+  const demoteMutation = useMutation({
+    mutationFn: async () => {
       const role = selectedUser.role;
-
       // Delete role-specific record if doctor/patient
       if (role === "doctor" || role === "patient") {
         await admin.delete(`/${role}s/${selectedUser._id}`);
       }
-
       // Update user role to "user"
       await admin.put(`/users/${selectedUser._id}`, { role: "user" });
-
+      return role;
+    },
+    onSuccess: (role) => {
       toast.success(
         `User demoted to base user role. ${
           role === "doctor" || role === "patient"
@@ -138,12 +140,26 @@ const UserManagement = () => {
       );
       setDemoteDialogOpen(false);
       setModalOpen(false);
-      await fetchAll();
-    } catch (err) {
+      fetchAll();
+    },
+    onError: (err) => {
       toast.error(
         "Error demoting user: " + (err?.response?.data?.message || err.message)
       );
+    },
+  });
+
+  const handleDemoteToUser = () => {
+    if (!selectedUser) return;
+
+    // Prevent self-demotion
+    if (selectedUser._id === currentUserId) {
+      toast.error("You cannot change your own role!");
+      setDemoteDialogOpen(false);
+      return;
     }
+
+    demoteMutation.mutate();
   };
 
   const columns = [
@@ -497,8 +513,19 @@ const UserManagement = () => {
               >
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleDemoteToUser}>
-                Confirm Demote
+              <Button
+                variant="destructive"
+                onClick={handleDemoteToUser}
+                disabled={demoteMutation.isPending}
+              >
+                {demoteMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Demoting...
+                  </>
+                ) : (
+                  "Confirm Demote"
+                )}
               </Button>
             </div>
           </div>

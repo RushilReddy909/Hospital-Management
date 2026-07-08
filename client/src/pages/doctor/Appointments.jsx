@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 import { format } from "date-fns";
 import {
@@ -25,25 +26,16 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 
 const Appointments = () => {
-  const [appointments, setAppointments] = useState([]);
   const [date, setDate] = useState(null);
   const [timeSlot, setTimeSlot] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const res = await api.get("/appointment");
-        setAppointments(res.data.data || []);
-      } catch (err) {
-        console.error("Failed to fetch appointments", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAppointments();
-  }, []);
+  const { data: appointments = [], isLoading: loading } = useQuery({
+    queryKey: ["doctor", "appointments"],
+    queryFn: async () => {
+      const res = await api.get("/appointment");
+      return res.data.data || [];
+    },
+  });
 
   const filteredAppointments = appointments.filter((appt) => {
     const apptDate = new Date(appt.date);

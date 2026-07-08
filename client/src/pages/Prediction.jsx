@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -38,29 +39,30 @@ const formSchema = z.object({
 
 const Prediction = () => {
   const [result, setResult] = useState(null);
-  const [symptomsList, setSymptomsList] = useState([]);
-  const [loadingSymptoms, setLoadingSymptoms] = useState(true);
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [inputValue, setInputValue] = useState("");
 
-  useEffect(() => {
-    const fetchSymptoms = async () => {
-      try {
-        const response = await api.get("/disease/symptoms");
-        setSymptomsList(response.data.data.symptoms);
-      } catch (error) {
-        toast.error(
-          `❌ Error fetching symptoms: ${
-            error.response?.data?.error || error.message
-          }`
-        );
-      } finally {
-        setLoadingSymptoms(false);
-      }
-    };
+  const {
+    data: symptomsList = [],
+    isLoading: loadingSymptoms,
+    error: symptomsError,
+  } = useQuery({
+    queryKey: ["symptoms"],
+    queryFn: async () => {
+      const response = await api.get("/disease/symptoms");
+      return response.data.data.symptoms;
+    },
+  });
 
-    fetchSymptoms();
-  }, []);
+  useEffect(() => {
+    if (symptomsError) {
+      toast.error(
+        `❌ Error fetching symptoms: ${
+          symptomsError.response?.data?.error || symptomsError.message
+        }`
+      );
+    }
+  }, [symptomsError]);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -69,18 +71,19 @@ const Prediction = () => {
     },
   });
 
-  const onSubmit = async (values) => {
-    try {
-      const response = await api.post("/disease/predict", {
-        symptoms: values.symptoms,
-      });
-
+  const predictMutation = useMutation({
+    mutationFn: (values) =>
+      api.post("/disease/predict", { symptoms: values.symptoms }),
+    onSuccess: (response) => {
       setResult(response.data.data.prediction || "Disease not found");
-    } catch (error) {
+    },
+    onError: (error) => {
       toast.error(`❌ Error: ${error.response?.data?.error || error.message}`);
       setResult(null);
-    }
-  };
+    },
+  });
+
+  const onSubmit = (values) => predictMutation.mutate(values);
 
   const handleSelectSymptom = (symptom) => {
     if (!selectedSymptoms.includes(symptom)) {
@@ -183,9 +186,9 @@ const Prediction = () => {
               <Button
                 type="submit"
                 className="w-full font-semibold"
-                disabled={form.formState.isSubmitting || loadingSymptoms}
+                disabled={predictMutation.isPending || loadingSymptoms}
               >
-                {form.formState.isSubmitting ? (
+                {predictMutation.isPending ? (
                   <>
                     <Loader2 className="animate-spin mr-2 h-4 w-4" />{" "}
                     Predicting...

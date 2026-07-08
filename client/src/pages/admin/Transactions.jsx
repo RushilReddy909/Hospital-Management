@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -17,24 +18,21 @@ import { Loader2, IndianRupee } from "lucide-react";
 import { toast } from "react-toastify";
 
 const AdminTransactions = () => {
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: transactions = [],
+    isLoading: loading,
+    isError,
+  } = useQuery({
+    queryKey: ["admin", "payments"],
+    queryFn: async () => {
+      const { data } = await admin.get("/payment");
+      return data.data;
+    },
+  });
 
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const { data } = await admin.get("/payment");
-        setTransactions(data.data);
-      } catch (err) {
-        console.error("Error fetching transactions:", err);
-        toast.error("Error fetching transactions");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTransactions();
-  }, []);
+    if (isError) toast.error("Error fetching transactions");
+  }, [isError]);
 
   const totalAmount = transactions.reduce((acc, txn) => acc + txn.amount, 0);
 
