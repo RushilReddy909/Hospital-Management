@@ -4,7 +4,6 @@ import patientModel from "../models/patientModel.js";
 import doctorModel from "../models/doctorModel.js";
 import authModel from "../models/authModel.js";
 import mongoose from "mongoose";
-import { cache } from "../utils/cache.js";
 
 const createAppointment = async (req, res) => {
   const errors = validationResult(req);
@@ -133,10 +132,6 @@ const createAppointment = async (req, res) => {
     // Save with the session
     await appointment.save({ session });
 
-    // Clear appointment caches for doctor and patient
-    await cache.del(`doctor:${doctor._id}:appointments`);
-    await cache.delPattern(`user:${effectivePatientUserId}:appointments:*`);
-
     // 3. Commit Transaction
     await session.commitTransaction();
     session.endSession();
@@ -225,16 +220,6 @@ const updateAppointment = async (req, res) => {
       });
     }
 
-    // Invalidate appointment caches for doctor and patient
-    const doctorIdStr = appointment.doctorID?.toString();
-    const patientIdStr = appointment.patientID?.toString();
-    if (doctorIdStr) {
-      await cache.del(`doctor:${doctorIdStr}:appointments`);
-    }
-    if (patientIdStr) {
-      await cache.delPattern(`user:${patientIdStr}:appointments:*`);
-    }
-
     return res.status(200).json({
       success: true,
       message: "Appointment status updated",
@@ -263,42 +248,30 @@ const getAppointment = async (req, res) => {
         filter._id = appointmentId;
       }
     } else if (role === "doctor") {
-      // Try cached doctor ObjectId
-      let doctorId = await cache.get(`user:${userID}:doctorId`);
-      if (!doctorId) {
-        const doctor = await doctorModel
-          .findOne({ doctorID: userID })
-          .select("_id")
-          .lean();
-        if (!doctor)
-          return res.status(404).json({
-            success: false,
-            message: "Doctor not found",
-          });
-        doctorId = doctor._id;
-        await cache.set(`user:${userID}:doctorId`, doctorId, 600);
-      }
-      filter.doctorID = doctorId;
+      const doctor = await doctorModel
+        .findOne({ doctorID: userID })
+        .select("_id")
+        .lean();
+      if (!doctor)
+        return res.status(404).json({
+          success: false,
+          message: "Doctor not found",
+        });
+      filter.doctorID = doctor._id;
       if (appointmentId && mongoose.Types.ObjectId.isValid(appointmentId)) {
         filter._id = appointmentId;
       }
     } else if (role === "patient") {
-      // Try cached patient ObjectId
-      let patientId = await cache.get(`user:${userID}:patientId`);
-      if (!patientId) {
-        const patient = await patientModel
-          .findOne({ patientID: userID })
-          .select("_id")
-          .lean();
-        if (!patient)
-          return res.status(404).json({
-            success: false,
-            message: "Patient not found",
-          });
-        patientId = patient._id;
-        await cache.set(`user:${userID}:patientId`, patientId, 600);
-      }
-      filter.patientID = patientId;
+      const patient = await patientModel
+        .findOne({ patientID: userID })
+        .select("_id")
+        .lean();
+      if (!patient)
+        return res.status(404).json({
+          success: false,
+          message: "Patient not found",
+        });
+      filter.patientID = patient._id;
       if (appointmentId && mongoose.Types.ObjectId.isValid(appointmentId)) {
         filter._id = appointmentId;
       }

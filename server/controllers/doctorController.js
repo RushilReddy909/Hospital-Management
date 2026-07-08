@@ -2,7 +2,6 @@ import { validationResult } from "express-validator";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
 import mongoose from "mongoose";
-import { cache } from "../utils/cache.js";
 
 const addDoctor = async (req, res) => {
   const errors = validationResult(req);
@@ -28,9 +27,6 @@ const addDoctor = async (req, res) => {
     const doctor = new doctorModel(req.body);
     await doctor.save();
 
-    // Invalidate doctors list cache
-    await cache.del("doctors:all");
-
     return res.status(201).json({
       success: true,
       message: "Doctor created successfully",
@@ -46,14 +42,7 @@ const addDoctor = async (req, res) => {
 
 const getAllDoctors = async (req, res) => {
   try {
-    // Try to get from cache first (TTL: 15 minutes)
-    let doctors = await cache.get("doctors:all");
-
-    if (!doctors) {
-      doctors = await doctorModel.find({});
-      // Cache the list
-      await cache.set("doctors:all", doctors, 900); // 15 min TTL
-    }
+    const doctors = await doctorModel.find({});
     return res.status(200).json({
       success: true,
       message: "All doctors retrieved",
@@ -79,15 +68,7 @@ const getDoctor = async (req, res) => {
   }
 
   try {
-    // Try to get from cache first (TTL: 10 minutes)
-    let doctor = await cache.get(`doctor:${id}`);
-
-    if (!doctor) {
-      doctor = await doctorModel.findOne({ doctorID: id });
-      if (doctor) {
-        await cache.set(`doctor:${id}`, doctor, 600); // 10 min TTL
-      }
-    }
+    const doctor = await doctorModel.findOne({ doctorID: id });
 
     return res.status(200).json({
       success: true,
@@ -137,10 +118,6 @@ const updateDoctor = async (req, res) => {
       });
     }
 
-    // Invalidate cache
-    await cache.del(`doctor:${id}`);
-    await cache.del("doctors:all");
-
     return res.status(200).json({
       success: true,
       message: "Updated doctor",
@@ -180,13 +157,6 @@ const deleteDoctor = async (req, res) => {
       { doctorID: deleted._id, date: { $gte: today } },
       { $set: { status: "Cancelled" } }
     );
-
-    // Invalidate caches
-    await cache.del(`doctor:${id}`);
-    await cache.del("doctors:all");
-    await cache.del(`doctor:${deleted._id}:appointments`);
-    await cache.del(`user:${id}:doctorId`);
-    await cache.delPattern(`user:*:appointments:*`);
 
     return res.status(200).json({
       success: true,

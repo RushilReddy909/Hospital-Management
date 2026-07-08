@@ -1,7 +1,6 @@
 import express from "express";
 import { body } from "express-validator";
 import { verifyToken } from "../middlewares/authMiddleware.js";
-import { createRateLimitMiddleware } from "../middlewares/rateLimitMiddleware.js";
 import {
   createOrder,
   saveTransaction,
@@ -27,6 +26,11 @@ const validateSaveTransaction = [
     .withMessage("Payment ID must be a string")
     .notEmpty()
     .withMessage("Payment ID is required"),
+  body("razorpaySignature")
+    .isString()
+    .withMessage("Razorpay signature must be a string")
+    .notEmpty()
+    .withMessage("Razorpay signature is required"),
   body("amount")
     .isNumeric()
     .withMessage("Amount must be a number")
@@ -44,16 +48,9 @@ const validateSaveTransaction = [
 
 const router = express.Router();
 
-// Create rate limit middleware for payment operations
-const paymentRateLimit = createRateLimitMiddleware({
-  identifier: "user",
-  envKey: "RATE_LIMIT_PAYMENT",
-});
-
 router.post(
   "/create-order",
   verifyToken,
-  paymentRateLimit,
   validateCreateOrder,
   createOrder
 );
@@ -61,11 +58,10 @@ router.post(
 router.post(
   "/save-transaction",
   verifyToken,
-  paymentRateLimit,
   validateSaveTransaction,
   saveTransaction
 );
 
-router.get("/", verifyToken, paymentRateLimit, getTransactions);
+router.get("/", verifyToken, getTransactions);
 
 export default router;

@@ -1,4 +1,6 @@
 # app.py
+import time
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
@@ -47,8 +49,14 @@ def predict():
         return jsonify({"success": False, "error": "'symptoms' must be a list"}), 400
 
     try:
+        t0 = time.perf_counter()
         X_input = preprocess_input(user_symptoms)
+        t1 = time.perf_counter()
         prediction = model.predict(X_input)[0]
+        t2 = time.perf_counter()
+
+        print(f"Preprocessing: {(t1 - t0) * 1000:.2f} ms")
+        print(f"Model inference: {(t2 - t1) * 1000:.2f} ms")
 
         return jsonify({
             "success": True,

@@ -4,7 +4,6 @@ import appointmentModel from "../models/appointmentModel.js";
 import authModel from "../models/authModel.js";
 import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
-import { cache } from "../utils/cache.js";
 
 //Patient Routes
 const upsertSelfPatient = async (req, res) => {
@@ -28,10 +27,6 @@ const upsertSelfPatient = async (req, res) => {
       patient = await newPatient.save();
       isNewPatient = true;
     }
-
-    // Invalidate cached profile/role for this user
-    await cache.del(`user:${patientID}:profile`);
-    await cache.del(`user:${patientID}:role`);
 
     // Fetch updated user to get the new role
     const updatedUser = await authModel.findById(patientID);
@@ -219,10 +214,6 @@ const updatePatient = async (req, res) => {
       }
     );
 
-    // Invalidate cached profile/role for this patient
-    await cache.del(`user:${id}:profile`);
-    await cache.del(`user:${id}:role`);
-
     return res.status(200).json({
       success: true,
       message: "Successfully updated patient",
@@ -265,12 +256,6 @@ const deletePatient = async (req, res) => {
       { patientID: deleted._id, date: { $gte: today } },
       { $set: { status: "Cancelled" } }
     );
-
-    // Invalidate cached profile/role for this patient
-    await cache.del(`user:${id}:profile`);
-    await cache.del(`user:${id}:role`);
-    await cache.del(`user:${id}:patientId`);
-    await cache.delPattern(`user:${deleted._id}:appointments:*`);
 
     res.status(200).json({
       success: true,

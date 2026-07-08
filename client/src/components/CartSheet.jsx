@@ -45,8 +45,9 @@ const CartSheet = ({ open, onOpenChange }) => {
         order_id: data.order.id,
         handler: async function (response) {
           await api.post("/payment/save-transaction", {
-            orderID: data.order.id,
+            orderID: response.razorpay_order_id,
             paymentID: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
             amount: data.order.amount,
             currency: data.order.currency,
             receipt: data.order.receipt,

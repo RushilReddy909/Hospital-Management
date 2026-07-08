@@ -1,5 +1,10 @@
 /node_modules
+
 .env
+*.env
+
 /.vscode
+
 /ai_model/model.pkl
 /ai_model/venv
+/ai_model/__pycache__
