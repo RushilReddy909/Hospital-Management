@@ -92,11 +92,11 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    if (verifiedUser) {
+    if (token && verifiedUser) {
       setUser(verifiedUser);
       if (location.pathname === "/login") navigate("/home", { replace: true });
     }
-  }, [verifiedUser, location.pathname, navigate, setUser]);
+  }, [token, verifiedUser, location.pathname, navigate, setUser]);
 
   useEffect(() => {
     if (location.state?.message) {

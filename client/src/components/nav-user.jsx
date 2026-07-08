@@ -25,15 +25,18 @@ import {
 } from "@/components/ui/sidebar";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "@/store/userStore";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function NavUser() {
   const { name, email, clearUser } = useUserStore();
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     clearUser();
+    queryClient.removeQueries({ queryKey: ["auth-user"] });
     navigate("/login");
   };
 
