@@ -7,7 +7,7 @@
   "scripts": {
     "dev:server": "nodemon server/server.js",
     "dev:client": "npm run dev --prefix client",
-    "dev:ai": "cd ai_model && python app.py",
+    "dev:ai": "cd ai_model && py -3.13 -m flask --app app run --port 8000",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:ai\"",
     "build:client": "cd client && npm --force install && npm run build",
     "build:server": "npm install",
