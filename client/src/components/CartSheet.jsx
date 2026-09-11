@@ -22,7 +22,7 @@ import { api } from "@/utils/api";
 const favicon = "/favicon.png";
 
 const CartSheet = ({ open, onOpenChange }) => {
-  const razorpayKey = "rzp_test_THQg3b0hnEOgPx";
+  const razorpayKey = "rzp_test_TaipsZNvwFD0Ls";
   const cart = useCartStore((state) => state.cart);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const clearCart = useCartStore((state) => state.clearCart);

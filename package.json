@@ -7,13 +7,23 @@
   "scripts": {
     "dev:server": "nodemon server/server.js",
     "dev:client": "npm run dev --prefix client",
-    "dev:ai": "cd ai_model && py -3.13 -m flask --app app run --port 8000",
+
+    "dev:ai": "cd ai_model && venv/bin/python -m flask --app app run --port 8000",
+    "//dev:ai:windows": "cd ai_model && venv\\Scripts\\python.exe -m flask --app app run --port 8000",
+
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:ai\"",
+
     "build:client": "cd client && npm --force install && npm run build",
     "build:server": "npm install",
-    "build:ai": "cd ai_model && pip install -r requirements.txt && python gen_model.py",
+
+    "build:ai": "cd ai_model && venv/bin/pip install -r requirements.txt && venv/bin/python gen_model.py",
+    "//build:ai:windows": "cd ai_model && venv\\Scripts\\pip.exe install -r requirements.txt && venv\\Scripts\\python.exe gen_model.py",
+
     "build": "npm run build:client && npm run build:server",
-    "start:ai": "cd ai_model && gunicorn -w 4 -b 0.0.0.0:5001 app:app",
+
+    "start:ai": "cd ai_model && venv/bin/gunicorn -w 4 -b 0.0.0.0:5001 app:app",
+    "//start:ai:windows": "gunicorn does not support native Windows — run this under WSL or Docker",
+
     "start": "cross-env NODE_ENV=production node server/server.js"
   },
   "author": "Rushil Reddy",
